@@ -11,12 +11,13 @@ import com.steve6472.multiplayerTest.network.packets.server.SChangeTile;
 import com.steve6472.multiplayerTest.network.packets.server.SConnectPlayer;
 import com.steve6472.multiplayerTest.network.packets.server.SDeleteBullet;
 import com.steve6472.multiplayerTest.network.packets.server.SDisconnectPlayer;
+import com.steve6472.multiplayerTest.network.packets.server.SSetName;
 import com.steve6472.multiplayerTest.network.packets.server.SSetNetworkId;
 import com.steve6472.multiplayerTest.network.packets.server.SSetScore;
+import com.steve6472.multiplayerTest.network.packets.server.SSetWorld;
 import com.steve6472.multiplayerTest.network.packets.server.SSpawnBullet;
 import com.steve6472.multiplayerTest.network.packets.server.SSpawnParticle;
 import com.steve6472.multiplayerTest.network.packets.server.STeleportPlayer;
-import com.steve6472.multiplayerTest.network.packets.server.SSetWorld;
 import com.steve6472.sge.main.networking.packet.IPacketHandler;
 
 public interface IClientHandler extends IPacketHandler
@@ -40,4 +41,6 @@ public interface IClientHandler extends IPacketHandler
 	public void handleSetNetworkId(SSetNetworkId packet);
 	
 	public void handleSetScore(SSetScore packet);
+	
+	public void handleSetName(SSetName packet);
 }

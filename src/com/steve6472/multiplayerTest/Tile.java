@@ -21,7 +21,7 @@ public class Tile
 	public static final Tile grassWithFlowers0 = new Tile(7, new Sprite("grassWithFlowers0.png"), false, 0);
 	public static final Tile sand = new Tile(8, new Sprite("sand.png"), false, 0);
 	public static final Tile wall = new Tile(9, new Sprite("wall.png"), true, 0);
-	public static final Tile water = new Tile(10, new Sprite("water.png"), false, 0);
+	public static final Tile water = new Tile(10, new Sprite("water.png"), true, 0);
 	
 	private static Tile[] tiles;
 	

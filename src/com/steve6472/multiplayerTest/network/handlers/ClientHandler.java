@@ -17,6 +17,7 @@ import com.steve6472.multiplayerTest.network.packets.server.SChangeTile;
 import com.steve6472.multiplayerTest.network.packets.server.SConnectPlayer;
 import com.steve6472.multiplayerTest.network.packets.server.SDeleteBullet;
 import com.steve6472.multiplayerTest.network.packets.server.SDisconnectPlayer;
+import com.steve6472.multiplayerTest.network.packets.server.SSetName;
 import com.steve6472.multiplayerTest.network.packets.server.SSetNetworkId;
 import com.steve6472.multiplayerTest.network.packets.server.SSetScore;
 import com.steve6472.multiplayerTest.network.packets.server.SSpawnBullet;
@@ -77,7 +78,7 @@ public class ClientHandler implements IClientHandler
 	@Override
 	public void handleConnectPlayerPacket(SConnectPlayer packet)
 	{
-		clientGui.players.add(new PlayerMP(packet.getX(), packet.getY(), packet.getNetworkId()));
+		clientGui.players.add(new PlayerMP(packet.getX(), packet.getY(), packet.getNetworkId(), packet.getName()));
 	}
 
 	@Override
@@ -134,6 +135,7 @@ public class ClientHandler implements IClientHandler
 	public void handleSetWorld(SSetWorld packet)
 	{
 		World world = new World(packet.getTilesX(), packet.getTilesY(), packet.getWorldId());
+		world.setTiles(packet.getTiles());
 		clientGui.world = world;
 	}
 	
@@ -165,6 +167,13 @@ public class ClientHandler implements IClientHandler
 			player.score = packet.getScore();
 		else
 			System.err.println("Can't find player with networkId " + packet.getNetworkId());
+	}
+	
+	@Override
+	public void handleSetName(SSetName packet)
+	{
+		PlayerMP player = client.getPlayer(packet.getNetworkId());
+		player.setName(packet.getName());
 	}
 
 }

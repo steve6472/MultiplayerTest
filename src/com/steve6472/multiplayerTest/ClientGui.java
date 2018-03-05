@@ -8,19 +8,21 @@
 package com.steve6472.multiplayerTest;
 
 import static org.lwjgl.glfw.GLFW.*;
+//import static org.lwjgl.opengl.GL11.*;
 
 import java.util.ArrayList;
 import java.util.List;
+
 
 import com.steve6472.multiplayerTest.network.Client;
 import com.steve6472.multiplayerTest.network.packets.client.CLeftPress;
 import com.steve6472.multiplayerTest.network.packets.client.CLeftRelease;
 import com.steve6472.multiplayerTest.network.packets.client.CMovePacket;
 import com.steve6472.multiplayerTest.network.packets.client.CRequestTile;
+import com.steve6472.multiplayerTest.network.packets.client.CSetName;
 import com.steve6472.sge.gfx.Screen;
 import com.steve6472.sge.gui.Gui;
 import com.steve6472.sge.gui.GuiUtils;
-import com.steve6472.sge.gui.components.Background;
 import com.steve6472.sge.main.MainApplication;
 import com.steve6472.sge.main.Util;
 import com.steve6472.sge.main.game.IObjectManipulator;
@@ -39,6 +41,8 @@ public class ClientGui extends Gui
 	public IObjectManipulator<Bullet> bullets;
 	public World world;
 	public int score;
+	
+	public static String name = "";
 
 	public ClientGui(MainApplication mainApp)
 	{
@@ -56,9 +60,10 @@ public class ClientGui extends Gui
 		loc = new Vec2(200, 200);
 		oldLoc = loc.clone();
 		
-		client = new Client("localhost", 1337, this);
+		client = new Client(MenuGui.ip.getText(), Integer.parseInt(MenuGui.port.getText()), this);
 		client.start();
 		client.sendPacket(new ConnectPacket());
+		client.sendPacket(new CSetName(name));
 	}
 
 	@Override
@@ -122,7 +127,7 @@ public class ClientGui extends Gui
 	@Override
 	public void render(Screen screen)
 	{
-		Background.renderFrame(screen, getMainApp());
+//		Background.renderFrame(screen, getMainApp());
 		
 		if (world != null)
 			world.render(screen);
@@ -134,10 +139,12 @@ public class ClientGui extends Gui
 			screen.fillRect(px, py, 32, 32, 0xffff0000);
 			String score = "Score:" + p.score;
 			String id = "#" + p.getNetworkId();
+			String name = p.getPlayerName();
+			font.render(name, px + 16 - name.length() * 4, py + 16);
 			font.render(id, px + 16 - id.length() * 4, py);
 			font.render(score, px + 16 - score.length() * 4, py + 8);
 		}
-		
+
 		font.render("Score: " + score, 5, 30);
 
 		screen.fillRect(loc.getIntX(), loc.getIntY(), 32, 32, 0xff0000ff);

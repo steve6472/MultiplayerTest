@@ -13,10 +13,12 @@ import com.steve6472.multiplayerTest.network.packets.client.CLeftPress;
 import com.steve6472.multiplayerTest.network.packets.client.CLeftRelease;
 import com.steve6472.multiplayerTest.network.packets.client.CMovePacket;
 import com.steve6472.multiplayerTest.network.packets.client.CRequestTile;
+import com.steve6472.multiplayerTest.network.packets.client.CSetName;
 import com.steve6472.multiplayerTest.network.packets.server.SChangeTile;
 import com.steve6472.multiplayerTest.network.packets.server.SConnectPlayer;
 import com.steve6472.multiplayerTest.network.packets.server.SDeleteBullet;
 import com.steve6472.multiplayerTest.network.packets.server.SDisconnectPlayer;
+import com.steve6472.multiplayerTest.network.packets.server.SSetName;
 import com.steve6472.multiplayerTest.network.packets.server.SSetNetworkId;
 import com.steve6472.multiplayerTest.network.packets.server.SSetScore;
 import com.steve6472.multiplayerTest.network.packets.server.SSetWorld;
@@ -57,6 +59,8 @@ public class MultiplayerTest extends MainApplication
 		Packet.addPacket(13, 	CRequestTile.class);
 		Packet.addPacket(14, 	SSetNetworkId.class);
 		Packet.addPacket(15, 	SSetScore.class);
+		Packet.addPacket(16, 	SSetName.class);
+		Packet.addPacket(17, 	CSetName.class);
 
 		serverGui = new ServerGui(this);
 		clientGui = new ClientGui(this);
@@ -106,7 +110,7 @@ public class MultiplayerTest extends MainApplication
 	{
 		glfwWindowHint(GLFW_DECORATED, GLFW_FALSE);
 	}
-
+	
 	public static void main(String[] args)
 	{
 		new MultiplayerTest();

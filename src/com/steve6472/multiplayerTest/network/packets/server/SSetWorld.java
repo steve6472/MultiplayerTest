@@ -18,12 +18,14 @@ public class SSetWorld extends Packet<IClientHandler>
 	int tilesX;
 	int tilesY;
 	int worldId;
+	int[] tiles;
 	
 	public SSetWorld(World world)
 	{
 		this.tilesX = world.getTilesX();
 		this.tilesY = world.getTilesY();
 		this.worldId = world.getWorldId();
+		this.tiles = world.getTiles();
 	}
 	
 	public SSetWorld()
@@ -36,6 +38,7 @@ public class SSetWorld extends Packet<IClientHandler>
 		output.writeInt(tilesX);
 		output.writeInt(tilesY);
 		output.writeInt(worldId);
+		output.writeIntArr(tiles);
 	}
 
 	@Override
@@ -44,6 +47,7 @@ public class SSetWorld extends Packet<IClientHandler>
 		this.tilesX = input.readInt();
 		this.tilesY = input.readInt();
 		this.worldId = input.readInt();
+		this.tiles = input.readIntArr();
 	}
 
 	@Override
@@ -65,6 +69,11 @@ public class SSetWorld extends Packet<IClientHandler>
 	public int getWorldId()
 	{
 		return worldId;
+	}
+	
+	public int[] getTiles()
+	{
+		return tiles;
 	}
 
 }

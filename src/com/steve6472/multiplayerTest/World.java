@@ -80,6 +80,19 @@ public class World implements IObject
 		return Tile.getTile(getTileId(x, y));
 	}
 	
+	public void setTiles(int tiles[])
+	{
+		for (int i = 0; i < tiles.length; i++)
+		{
+			this.tiles[i] = tiles[i];
+		}
+	}
+	
+	public int[] getTiles()
+	{
+		return tiles;
+	}
+	
 	public int getTilesX()
 	{
 		return width;

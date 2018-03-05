@@ -25,6 +25,8 @@ public class PlayerMP extends BaseEntity
 	
 	public Vec2 lastValidLocation = new Vec2();
 	public int score = 0;
+	public boolean checkLocation = true;
+	public String name = "unnamed";
 	
 	private static int nextNetworkId;
 
@@ -44,15 +46,31 @@ public class PlayerMP extends BaseEntity
 		this.setLocation(x, y);
 	}
 	
+	public void checkLocation()
+	{
+		checkLocation = true;
+	}
+	
+	public void setName(String name)
+	{
+		this.name = name;
+	}
+	
+	public String getPlayerName()
+	{
+		return name;
+	}
+	
 	/**
 	 * Client init
 	 * @param x
 	 * @param y
 	 * @param networkId
 	 */
-	public PlayerMP(int x, int y, int networkId)
+	public PlayerMP(int x, int y, int networkId, String name)
 	{
 		this.setLocation(x, y);
+		this.name = name;
 		this.networkId = networkId;
 	}
 

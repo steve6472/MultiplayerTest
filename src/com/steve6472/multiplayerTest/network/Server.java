@@ -93,6 +93,9 @@ public class Server extends UDPServer
 		
 		for (PlayerMP p : sg.players)
 		{
+			if (!p.checkLocation)
+				continue;
+			
 			int px = p.getLocation().getIntX();
 			int py = p.getLocation().getIntY();
 

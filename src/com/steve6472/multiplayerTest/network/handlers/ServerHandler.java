@@ -14,8 +14,10 @@ import com.steve6472.multiplayerTest.network.packets.client.CLeftPress;
 import com.steve6472.multiplayerTest.network.packets.client.CLeftRelease;
 import com.steve6472.multiplayerTest.network.packets.client.CMovePacket;
 import com.steve6472.multiplayerTest.network.packets.client.CRequestTile;
+import com.steve6472.multiplayerTest.network.packets.client.CSetName;
 import com.steve6472.multiplayerTest.network.packets.server.STeleportPlayer;
 import com.steve6472.multiplayerTest.network.packets.server.SChangeTile;
+import com.steve6472.multiplayerTest.network.packets.server.SSetName;
 import com.steve6472.multiplayerTest.network.packets.server.SSpawnBullet;
 import com.steve6472.multiplayerTest.network.packets.server.SSpawnParticle;
 import com.steve6472.sge.main.Util;
@@ -37,6 +39,7 @@ public class ServerHandler implements IServerHandler
 		int x = packet.x;
 		int y = packet.y;
 		PlayerMP player = server.getPlayer(packet.getSender());
+		player.checkLocation();
 		player.setLocation(x, y);
 		player.updateBox();
 		server.sendPacketWithException(new STeleportPlayer(x, y, player.getNetworkId()), packet.getSender());
@@ -46,9 +49,11 @@ public class ServerHandler implements IServerHandler
 	public void handleLeftPressPacket(CLeftPress packet)
 	{
 		PlayerMP player = server.getPlayer(packet.getSender());
-		server.sendPacket(new SSpawnParticle(player.getLocation().getIntX() + 16, player.getLocation().getIntY() + 16, 0, 16));
-		SSpawnBullet bulletPacket = new SSpawnBullet(player.getLocation().getIntX() + 16, player.getLocation().getIntY() + 16,
-				Util.countAngle(packet.getX(), packet.getY(), player.getLocation().getX() + 16, player.getLocation().getY() + 16), Server.nextNetworkId++, player.getNetworkId());
+		int px = player.lastValidLocation.getIntX() + 16;
+		int py = player.lastValidLocation.getIntY() + 16;
+		server.sendPacket(new SSpawnParticle(px, py, 0, 16));
+		SSpawnBullet bulletPacket = new SSpawnBullet(px, py, Util.countAngle(packet.getX(), packet.getY(), px, py), Server.nextNetworkId++,
+				player.getNetworkId());
 		server.bullets.add(bulletPacket.createBullet());
 		server.sendPacket(bulletPacket);
 	}
@@ -63,6 +68,20 @@ public class ServerHandler implements IServerHandler
 	{
 //		System.out.println("Client requested tile " + packet.getIndex());
 		server.sendPacket(new SChangeTile(packet.getIndex(), serverGui.world0.getTileId(packet.getIndex())), packet.getSender());
+	}
+	
+	@Override
+	public void handleSetName(CSetName packet)
+	{
+		PlayerMP player = server.getPlayer(packet.getSender());
+		if (player != null)
+		{
+			player.setName(packet.getName());
+			server.sendPacketWithException(new SSetName(packet.getName(), player.getNetworkId()), packet.getSender());
+		} else
+		{
+			System.err.println("Can't find player from datagram: " + packet.getSender().getAddress().getHostAddress() + ":" + packet.getSender().getPort());
+		}
 	}
 
 }

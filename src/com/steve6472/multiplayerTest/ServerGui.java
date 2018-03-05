@@ -11,8 +11,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.steve6472.multiplayerTest.network.Server;
+import com.steve6472.multiplayerTest.structures.Lake;
 import com.steve6472.multiplayerTest.structures.Structure;
 import com.steve6472.multiplayerTest.structures.WallStructure0;
+import com.steve6472.multiplayerTest.structures.WallStructure1;
 import com.steve6472.sge.gfx.Screen;
 import com.steve6472.sge.gui.Gui;
 import com.steve6472.sge.gui.GuiUtils;
@@ -37,7 +39,7 @@ public class ServerGui extends Gui
 	@Override
 	public void showEvent()
 	{
-		server = new Server(1337, this);
+		server = new Server(Integer.parseInt(MenuGui.port.getText()), this);
 		server.start();
 		
 		world0 = new World(32, 18, 0);
@@ -50,9 +52,9 @@ public class ServerGui extends Gui
 			}
 		}
 		
-		Structure[] structures = new Structure[] { new WallStructure0() };
+		Structure[] structures = new Structure[] { new WallStructure0(), new WallStructure1(), new Lake() };
 		
-		for (int i = 0; i < 2; i++)
+		for (int i = 0; i < 5; i++)
 		{
 			int x = Util.getRandomInt(world0.getTilesX(), 0);
 			int y = Util.getRandomInt(world0.getTilesY(), 0);
@@ -93,7 +95,9 @@ public class ServerGui extends Gui
 			String ip = p.getIp().getHostName() + ":" + p.getPort();
 			String id = "#" + p.getNetworkId();
 			String score = "Score:" + p.score;
+			String name = p.getPlayerName();
 			screen.fillRect(px, py, 32, 32, 0xffff0000);
+			font.render(name, px + 16 - name.length() * 4, py - 16);
 			font.render(ip, px + 16 - ip.length() * 4, py - 8);
 			font.render(id, px + 16 - id.length() * 4, py);
 			font.render(score, px + 16 - score.length() * 4, py + 8);
