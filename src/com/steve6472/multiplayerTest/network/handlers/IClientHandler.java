@@ -8,6 +8,7 @@
 package com.steve6472.multiplayerTest.network.handlers;
 
 import com.steve6472.multiplayerTest.network.packets.server.SChangeTile;
+import com.steve6472.multiplayerTest.network.packets.server.SChat;
 import com.steve6472.multiplayerTest.network.packets.server.SConnectPlayer;
 import com.steve6472.multiplayerTest.network.packets.server.SDeleteBullet;
 import com.steve6472.multiplayerTest.network.packets.server.SDisconnectPlayer;
@@ -43,4 +44,6 @@ public interface IClientHandler extends IPacketHandler
 	public void handleSetScore(SSetScore packet);
 	
 	public void handleSetName(SSetName packet);
+	
+	public void handleChat(SChat packet);
 }

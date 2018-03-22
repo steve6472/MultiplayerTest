@@ -15,6 +15,7 @@ import com.steve6472.multiplayerTest.PlayerMP;
 import com.steve6472.multiplayerTest.ServerGui;
 import com.steve6472.multiplayerTest.World;
 import com.steve6472.multiplayerTest.network.handlers.ServerHandler;
+import com.steve6472.multiplayerTest.network.packets.server.SChat;
 import com.steve6472.multiplayerTest.network.packets.server.SConnectPlayer;
 import com.steve6472.multiplayerTest.network.packets.server.SDeleteBullet;
 import com.steve6472.multiplayerTest.network.packets.server.SDisconnectPlayer;
@@ -53,14 +54,13 @@ public class Server extends UDPServer
 				if (b.getShooterNetworkId() == p.getNetworkId())
 					continue;
 				
-//				System.out.println(b.getBox() + " " + p.getBox());
-//				System.out.println(b.getShooterNetworkId() + " " + p.getNetworkId());
-				
 				if (b.getBox().intersects(p.getBox()))
 				{
-//					System.out.println("Deleting");
-					p.score = 0;
-					sendPacket(new SSetScore(0, p.getNetworkId()));
+					p.score -= 2;
+					if (p.score < 0)
+						p.score = 0;
+					
+					sendPacket(new SSetScore(p.score, p.getNetworkId()));
 					
 					PlayerMP shooter = getPlayer(b.getShooterNetworkId());
 					
@@ -161,6 +161,7 @@ public class Server extends UDPServer
 		PlayerMP newPlayer = addNewPlayer(packet.getAddress(), packet.getPort(), 200, 200);
 		sendPacket(new SSetWorld(sg.world0), packet);
 		sendPacket(new SSetNetworkId(newPlayer.getNetworkId()), packet);
+		sendPacket(new SChat("Player has connected", -1));
 		
 		sendPacketWithException(new SConnectPlayer(newPlayer), packet);
 	}

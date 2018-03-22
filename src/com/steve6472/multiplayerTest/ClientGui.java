@@ -15,6 +15,7 @@ import java.util.List;
 
 
 import com.steve6472.multiplayerTest.network.Client;
+import com.steve6472.multiplayerTest.network.packets.client.CChat;
 import com.steve6472.multiplayerTest.network.packets.client.CLeftPress;
 import com.steve6472.multiplayerTest.network.packets.client.CLeftRelease;
 import com.steve6472.multiplayerTest.network.packets.client.CMovePacket;
@@ -25,6 +26,7 @@ import com.steve6472.sge.gui.Gui;
 import com.steve6472.sge.gui.GuiUtils;
 import com.steve6472.sge.main.MainApplication;
 import com.steve6472.sge.main.Util;
+import com.steve6472.sge.main.callbacks.CharCallback;
 import com.steve6472.sge.main.game.IObjectManipulator;
 import com.steve6472.sge.main.game.Vec2;
 import com.steve6472.sge.main.game.particle.Particle;
@@ -35,12 +37,15 @@ public class ClientGui extends Gui
 
 	private static final long serialVersionUID = -8970752667717685758L;
 	Client client;
-	public List<PlayerMP> players;
 	public Vec2 loc, oldLoc;
-	public IObjectManipulator<Particle> particles;
+	public List<String> chatText;
+	public List<PlayerMP> players;
 	public IObjectManipulator<Bullet> bullets;
+	public IObjectManipulator<Particle> particles;
 	public World world;
 	public int score;
+	private boolean openedChat = false;
+	private String chatFieldText = "";
 	
 	public static String name = "";
 
@@ -48,12 +53,48 @@ public class ClientGui extends Gui
 	{
 		super(mainApp);
 		switchRender();
+
+		mainApp.getKeyHandler().addKeyCallback((key, scancode, action, mod) ->
+		{
+			if (key == GLFW_KEY_ENTER && action == GLFW_PRESS)
+			{
+				if (!openedChat)
+				{
+					openedChat = true;
+				} else
+				{
+					if (!chatFieldText.isEmpty())
+					{
+						client.sendPacket(new CChat(chatFieldText));
+					}
+					chatFieldText = "";
+					openedChat = false;
+				}
+			}
+			
+			if (openedChat && key == GLFW_KEY_BACKSPACE && (action == GLFW_PRESS || action == GLFW_REPEAT) && chatFieldText.length() >= 1)
+			{
+				chatFieldText = chatFieldText.substring(0, chatFieldText.length() - 1);
+			}
+		});
+
+		mainApp.getKeyHandler().addCharCallback(new CharCallback()
+		{
+			@Override
+			public void invoke(int codePoint)
+			{
+				if (openedChat)
+					if (chatFieldText.length() < 63)
+						chatFieldText += Character.toChars(codePoint)[0];
+			}
+		});
 	}
 
 	@Override
 	public void showEvent()
 	{
 		players = new ArrayList<PlayerMP>();
+		chatText = new ArrayList<String>();
 		particles = new IObjectManipulator<Particle>();
 		bullets = new IObjectManipulator<Bullet>();
 		
@@ -79,38 +120,41 @@ public class ClientGui extends Gui
 	@Override
 	public void guiTick()
 	{
-		if (getMainApp().getKeyHandler().isKeyPressed(GLFW_KEY_W))
-			loc.move(Util.countAngle(loc.clone().right(16).down(16), getMainApp().getMouseHandler().toVec()));
-		
-		if (getMainApp().getKeyHandler().isKeyPressed(GLFW_KEY_S))
-			loc.move(Util.countAngle(loc.clone().right(16).down(16), getMainApp().getMouseHandler().toVec()) + 180);
-		
-		delay++;
-		if (delay >= 2)
+		if (!openedChat)
 		{
-			if (!loc.equals(oldLoc))
+			if (getMainApp().getKeyHandler().isKeyPressed(GLFW_KEY_W))
+				loc.move(Util.countAngle(loc.clone().right(16).down(16), getMainApp().getMouseHandler().toVec()));
+
+			if (getMainApp().getKeyHandler().isKeyPressed(GLFW_KEY_S))
+				loc.move(Util.countAngle(loc.clone().right(16).down(16), getMainApp().getMouseHandler().toVec()) + 180);
+
+			delay++;
+			if (delay >= 2)
 			{
-				client.sendPacket(new CMovePacket(loc.getIntX(), loc.getIntY()));
-				delay = 0;
-				oldLoc = loc.clone();
+				if (!loc.equals(oldLoc))
+				{
+					client.sendPacket(new CMovePacket(loc.getIntX(), loc.getIntY()));
+					delay = 0;
+					oldLoc = loc.clone();
+				}
 			}
-		}
-		
-		if (getMainApp().getMouseHandler().isMouseHolded() && getMainApp().getMouseHandler().getButton() == 3)
-		{
-			loc.setLocation(getMainApp().getMouseHandler().toVec().clone().left(16).up(16));
-		}
-		
-		if (getMainApp().getMouseHandler().isMouseHolded() && !mousePressed && getMainApp().getMouseHandler().getButton() == 1)
-		{
-			client.sendPacket(new CLeftPress(getMainApp().getMouseHandler()));
-			mousePressed = true;
-		}
-		
-		if (!getMainApp().getMouseHandler().isMouseHolded() && mousePressed)
-		{
-			client.sendPacket(new CLeftRelease(getMainApp().getMouseHandler()));
-			mousePressed = false;
+
+			if (getMainApp().getMouseHandler().isMouseHolded() && getMainApp().getMouseHandler().getButton() == 3)
+			{
+				loc.setLocation(getMainApp().getMouseHandler().toVec().clone().left(16).up(16));
+			}
+
+			if (getMainApp().getMouseHandler().isMouseHolded() && !mousePressed && getMainApp().getMouseHandler().getButton() == 1)
+			{
+				client.sendPacket(new CLeftPress(getMainApp().getMouseHandler()));
+				mousePressed = true;
+			}
+
+			if (!getMainApp().getMouseHandler().isMouseHolded() && mousePressed)
+			{
+				client.sendPacket(new CLeftRelease(getMainApp().getMouseHandler()));
+				mousePressed = false;
+			}
 		}
 
 		if (world != null)
@@ -151,6 +195,19 @@ public class ClientGui extends Gui
 
 		bullets.render(screen);
 		particles.render(screen);
+		
+		int baseY = getMainApp().getCurrentHeight() - 27;
+		
+		for (int i = 0; i < chatText.size(); i++)
+		{
+			font.render(chatText.get(i), 5, baseY - 10 * i);
+		}
+		
+		if (openedChat)
+		{
+			screen.fillRect(0, getMainApp().getCurrentHeight() - 10, 8 * 64 + 4, 10, 0x80000000);
+			font.render(chatFieldText, 2, getMainApp().getCurrentHeight() - 9);
+		}
 	}
 
 }

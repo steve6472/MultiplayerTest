@@ -7,6 +7,7 @@
 
 package com.steve6472.multiplayerTest.network.handlers;
 
+import com.steve6472.multiplayerTest.network.packets.client.CChat;
 import com.steve6472.multiplayerTest.network.packets.client.CLeftPress;
 import com.steve6472.multiplayerTest.network.packets.client.CLeftRelease;
 import com.steve6472.multiplayerTest.network.packets.client.CMovePacket;
@@ -25,4 +26,6 @@ public interface IServerHandler extends IPacketHandler
 	public void handleRequestTile(CRequestTile packet);
 	
 	public void handleSetName(CSetName packet);
+	
+	public void handleChat(CChat packet);
 }

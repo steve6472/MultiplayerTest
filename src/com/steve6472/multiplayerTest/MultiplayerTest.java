@@ -9,12 +9,14 @@ package com.steve6472.multiplayerTest;
 
 import static org.lwjgl.glfw.GLFW.*;
 
+import com.steve6472.multiplayerTest.network.packets.client.CChat;
 import com.steve6472.multiplayerTest.network.packets.client.CLeftPress;
 import com.steve6472.multiplayerTest.network.packets.client.CLeftRelease;
 import com.steve6472.multiplayerTest.network.packets.client.CMovePacket;
 import com.steve6472.multiplayerTest.network.packets.client.CRequestTile;
 import com.steve6472.multiplayerTest.network.packets.client.CSetName;
 import com.steve6472.multiplayerTest.network.packets.server.SChangeTile;
+import com.steve6472.multiplayerTest.network.packets.server.SChat;
 import com.steve6472.multiplayerTest.network.packets.server.SConnectPlayer;
 import com.steve6472.multiplayerTest.network.packets.server.SDeleteBullet;
 import com.steve6472.multiplayerTest.network.packets.server.SDisconnectPlayer;
@@ -61,6 +63,8 @@ public class MultiplayerTest extends MainApplication
 		Packet.addPacket(15, 	SSetScore.class);
 		Packet.addPacket(16, 	SSetName.class);
 		Packet.addPacket(17, 	CSetName.class);
+		Packet.addPacket(18, 	SChat.class);
+		Packet.addPacket(19, 	CChat.class);
 
 		serverGui = new ServerGui(this);
 		clientGui = new ClientGui(this);

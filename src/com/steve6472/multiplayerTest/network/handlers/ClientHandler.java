@@ -14,6 +14,7 @@ import com.steve6472.multiplayerTest.PlayerMP;
 import com.steve6472.multiplayerTest.World;
 import com.steve6472.multiplayerTest.network.Client;
 import com.steve6472.multiplayerTest.network.packets.server.SChangeTile;
+import com.steve6472.multiplayerTest.network.packets.server.SChat;
 import com.steve6472.multiplayerTest.network.packets.server.SConnectPlayer;
 import com.steve6472.multiplayerTest.network.packets.server.SDeleteBullet;
 import com.steve6472.multiplayerTest.network.packets.server.SDisconnectPlayer;
@@ -174,6 +175,34 @@ public class ClientHandler implements IClientHandler
 	{
 		PlayerMP player = client.getPlayer(packet.getNetworkId());
 		player.setName(packet.getName());
+	}
+	
+	@Override
+	public void handleChat(SChat packet)
+	{
+//		System.out.println("Server sended message: " + packet.getText() + " From: " + packet.getNetworkId());
+		//Server message
+		if (packet.getNetworkId() == -1)
+		{
+			clientGui.chatText.add(packet.getText());
+		} else
+		{
+			if (client.networkId == packet.getNetworkId())
+			{
+				clientGui.chatText.add("<" + ClientGui.name + "> " + packet.getText());
+			} else
+			{
+				PlayerMP player = client.getPlayer(packet.getNetworkId());
+				
+				if (player != null)
+					clientGui.chatText.add("<" + client.getPlayer(packet.getNetworkId()).getPlayerName() + "> " + packet.getText());
+				else
+					clientGui.chatText.add("<" + "invalidId" + "> " + packet.getText());
+			}
+		}
+		
+		if (clientGui.chatText.size() > 8)
+			clientGui.chatText.remove(0);
 	}
 
 }
