@@ -7,49 +7,113 @@
 
 package com.steve6472.multiplayerTest;
 
-import com.steve6472.sge.gfx.Sprite;
+import java.util.ArrayList;
+import java.util.List;
+
+import com.steve6472.sge.main.game.Atlas;
 
 public class Tile
 {
-	public static final Tile air = new Tile(0, new Sprite(), false, 0);
-	public static final Tile crackedWall0 = new Tile(1, new Sprite("crackedWall0.png"), true, 0);
-	public static final Tile crackedWall1 = new Tile(2, new Sprite("crackedWall1.png"), true, 0);
-	public static final Tile crackedWall2 = new Tile(3, new Sprite("crackedWall2.png"), true, 0);
-	public static final Tile crackedWall3 = new Tile(4, new Sprite("crackedWall3.png"), true, 0);
-	public static final Tile crackedWall4 = new Tile(5, new Sprite("crackedWall4.png"), true, 0);
-	public static final Tile grass = new Tile(6, new Sprite("grass.png"), false, 0);
-	public static final Tile grassWithFlowers0 = new Tile(7, new Sprite("grassWithFlowers0.png"), false, 0);
-	public static final Tile sand = new Tile(8, new Sprite("sand.png"), false, 0);
-	public static final Tile wall = new Tile(9, new Sprite("wall.png"), true, 0);
-	public static final Tile water = new Tile(10, new Sprite("water.png"), true, 0);
+	public static final Tile air = new Tile(0, "", false, false, 0);
+	public static final Tile crackedWall0 = new Tile(1, "crackedWall0.png", true, true, 0);
+	public static final Tile crackedWall1 = new Tile(2, "crackedWall1.png", true, true, 0);
+	public static final Tile crackedWall2 = new Tile(3, "crackedWall2.png", true, true, 0);
+	public static final Tile crackedWall3 = new Tile(4, "crackedWall3.png", true, true, 0);
+	public static final Tile crackedWall4 = new Tile(5, "crackedWall4.png", true, true, 0);
+	public static final Tile grass = new Tile(6, "grass.png", false, false, 0);
+	public static final Tile grassWithFlowers0 = new Tile(7, "grassWithFlowers0.png", false, false, 0);
+	public static final Tile sand = new Tile(8, "sand.png", false, false, 0);
+	public static final Tile wall = new Tile(9, "wall.png", true, true, 0);
+	public static final Tile water = new Tile(10, "water.png", true, false, 0);
+	
+	@SuppressWarnings("unused")
+	private static final Tile NULL = new Tile(-1, null, false, false, 0);
+	
+	public static Atlas atlas;
 	
 	private static Tile[] tiles;
+	private static String[] sprites;
 	
 	private final int id;
 	private final int light;
-	private final Sprite sprite;
+//	private final Sprite sprite;
 	private final boolean isSolid;
+	private final boolean castShadow;
 	
-	public Tile(int id, Sprite sprite, boolean isSolid, int light)
+	private int indexX = 0;
+	private int indexY = 0;
+	
+	public Tile(int id, String sprite, boolean isSolid, boolean castShadow, int light)
 	{
+		if (id == -1 && sprite == null)
+		{
+			createAtlas();
+			this.id = id;
+			this.isSolid = isSolid;
+			this.light = light;
+			this.castShadow = castShadow;
+			return;
+		}
+		
 		if (id == 0)
+		{
+			sprites = new String[255];
 			tiles = new Tile[255];
+		}
 		
 		this.id = id;
-		this.sprite = sprite;
 		this.isSolid = isSolid;
 		this.light = light;
+		this.castShadow = castShadow;
+		
+		sprites[id] = sprite;
 		tiles[id] = this;
 	}
 	
-	public Sprite getSprite()
+	private static void createAtlas()
 	{
-		return sprite;
+		List<String> strs = new ArrayList<String>();
+		for (String s : sprites)
+		{
+			if (s == null)
+				break;
+			strs.add(s);
+		}
+		atlas = new Atlas(strs);
+		atlas.create(32, (x, y, i) -> tiles[i].setIndexes(x, y, i));
+		for (Tile t : tiles)
+		{
+			if (t == null)
+				break;
+			System.out.println(t.getId() + " " + t.getIndexX() + " " + t.getIndexY());
+		}
+	}
+	
+	private void setIndexes(int x, int y, int index)
+	{
+//		System.out.println(x + "/" + y + " " + index);
+		tiles[index].indexX = x;
+		tiles[index].indexY = y;
+	}
+	
+	public int getIndexX()
+	{
+		return indexX;
+	}
+	
+	public int getIndexY()
+	{
+		return indexY;
 	}
 	
 	public boolean isSolid()
 	{
 		return isSolid;
+	}
+	
+	public boolean castShadow()
+	{
+		return castShadow;
 	}
 	
 	public int getId()

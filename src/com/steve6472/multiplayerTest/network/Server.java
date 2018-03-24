@@ -9,6 +9,7 @@ package com.steve6472.multiplayerTest.network;
 
 import java.net.DatagramPacket;
 import java.net.InetAddress;
+import java.util.Iterator;
 
 import com.steve6472.multiplayerTest.Bullet;
 import com.steve6472.multiplayerTest.PlayerMP;
@@ -31,6 +32,9 @@ public class Server extends UDPServer
 	
 	ServerGui sg;
 	int moveLimit = 25;
+	
+	/* Kicn player after --- ms of inactivity */
+	public static final long timeout = 10 * 1000;
 	
 	public static int nextNetworkId;
 
@@ -91,6 +95,34 @@ public class Server extends UDPServer
 			}
 		}
 		
+		for (Iterator<PlayerMP> iter = sg.players.iterator(); iter.hasNext();)
+		{
+			PlayerMP p = iter.next();
+			
+			if (System.currentTimeMillis() - p.lastUpdate > timeout)
+			{
+				String text = p.getIp() + ":" + p.getPort();
+				int remove = -1;
+				
+				for (int i = 0; i < sg.playerList.getItems().size(); i++)
+				{
+					if (sg.playerList.getItems().get(i).getText().equals(text))
+					{
+						remove = i;
+						break;
+					}
+				}
+				
+				if (remove != -1)
+				{
+					sendPacket(new SDisconnectPlayer(sg.players.get(remove)));
+					sg.playerList.removeItem(remove);
+					iter.remove();
+				}
+//				System.out.println(text + " has disconnected " + remove);
+			}
+		}
+		
 		for (PlayerMP p : sg.players)
 		{
 			if (!p.checkLocation)
@@ -99,39 +131,53 @@ public class Server extends UDPServer
 			int px = p.getLocation().getIntX();
 			int py = p.getLocation().getIntY();
 
-			int px00 = px / 32;
-			int py00 = py / 32;
+			int px00 = (px + 1) / 32;
+			int py00 = (py + 1) / 32;
 			
-			int px10 = (px + 32) / 32;
-			int py10 = py / 32;
+			int px10 = (px + 32 - 1) / 32;
+			int py10 = (py + 1) / 32;
 
-			int px01 = px / 32;
-			int py01 = (py + 32) / 32;
+			int px01 = (px + 1) / 32;
+			int py01 = (py + 32 - 1) / 32;
 
-			int px11 = (px + 32) / 32;
-			int py11 = (py + 32) / 32;
+			int px11 = (px + 32 - 1) / 32;
+			int py11 = (py + 32 - 1) / 32;
 			
 			boolean isValid = true;
 			
-			if (!isTileLocOutOfBounds(px00, py00, sg.world0))
+			if (!isTileLocOutOfBounds(px00, py00, sg.getWorld(p.worldId)))
 				if (sg.world0.getTile(px00, py00).isSolid())
 					isValid = moveToLastValidLocation(p);
 			
-			if (!isTileLocOutOfBounds(px01, py01, sg.world0))
+			if (!isTileLocOutOfBounds(px01, py01, sg.getWorld(p.worldId)))
 				if (sg.world0.getTile(px01, py01).isSolid())
 					isValid = moveToLastValidLocation(p);
 			
-			if (!isTileLocOutOfBounds(px10, py10, sg.world0))
+			if (!isTileLocOutOfBounds(px10, py10, sg.getWorld(p.worldId)))
 				if (sg.world0.getTile(px10, py10).isSolid())
 					isValid = moveToLastValidLocation(p);
 			
-			if (!isTileLocOutOfBounds(px11, py11, sg.world0))
+			if (!isTileLocOutOfBounds(px11, py11, sg.getWorld(p.worldId)))
 				if (sg.world0.getTile(px11, py11).isSolid())
 					isValid = moveToLastValidLocation(p);
 			
 			if (isValid)
 			{
 				p.lastValidLocation = p.getNewLocation();
+				if (px <= -16)
+				{
+					sendPacket(new SSetWorld(sg.world1), p.getIp(), p.getPort());
+					p.worldId = 1;
+					p.setLocation(sg.getMainApp().getWidth() - 20, p.getLocation().getIntY());
+					sendPacket(new STeleportPlayer(p.getLocation().getIntX(), p.getLocation().getIntY(), p.getNetworkId()), p.getIp(), p.getPort());
+				}
+				if (px >= sg.getMainApp().getWidth() - 16)
+				{
+					sendPacket(new SSetWorld(sg.world0), p.getIp(), p.getPort());
+					p.worldId = 0;
+					p.setLocation(-10, p.getLocation().getIntY());
+					sendPacket(new STeleportPlayer(p.getLocation().getIntX(), p.getLocation().getIntY(), p.getNetworkId()), p.getIp(), p.getPort());
+				}
 			}
 		}
 	}
@@ -145,7 +191,7 @@ public class Server extends UDPServer
 	
 	public boolean isTileLocOutOfBounds(int x, int y, World world)
 	{
-		return (x < 0 || y < 0 || x >= sg.world0.getTilesX() || y >= sg.world0.getTilesY());
+		return (x < 0 || y < 0 || x >= world.getTilesX() || y >= world.getTilesY());
 	}
 
 	@Override
@@ -159,6 +205,7 @@ public class Server extends UDPServer
 		}
 		
 		PlayerMP newPlayer = addNewPlayer(packet.getAddress(), packet.getPort(), 200, 200);
+		newPlayer.worldId = 0;
 		sendPacket(new SSetWorld(sg.world0), packet);
 		sendPacket(new SSetNetworkId(newPlayer.getNetworkId()), packet);
 		sendPacket(new SChat("Player has connected", -1));

@@ -10,6 +10,7 @@ package com.steve6472.multiplayerTest.network.handlers;
 import java.util.Arrays;
 
 import com.steve6472.multiplayerTest.ClientGui;
+import com.steve6472.multiplayerTest.MultiplayerTest;
 import com.steve6472.multiplayerTest.PlayerMP;
 import com.steve6472.multiplayerTest.World;
 import com.steve6472.multiplayerTest.network.Client;
@@ -135,7 +136,7 @@ public class ClientHandler implements IClientHandler
 	@Override
 	public void handleSetWorld(SSetWorld packet)
 	{
-		World world = new World(packet.getTilesX(), packet.getTilesY(), packet.getWorldId());
+		World world = new World(packet.getTilesX(), packet.getTilesY(), packet.getWorldId(), MultiplayerTest.camera, clientGui.getMainApp());
 		world.setTiles(packet.getTiles());
 		clientGui.world = world;
 	}

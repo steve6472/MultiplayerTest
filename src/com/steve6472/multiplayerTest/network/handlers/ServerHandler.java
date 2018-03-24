@@ -7,6 +7,8 @@
 
 package com.steve6472.multiplayerTest.network.handlers;
 
+import java.net.DatagramPacket;
+
 import com.steve6472.multiplayerTest.PlayerMP;
 import com.steve6472.multiplayerTest.ServerGui;
 import com.steve6472.multiplayerTest.network.Server;
@@ -41,6 +43,12 @@ public class ServerHandler implements IServerHandler
 		int x = packet.x;
 		int y = packet.y;
 		PlayerMP player = server.getPlayer(packet.getSender());
+		if (player == null)
+		{
+			printCantFindPlayerErrorMessage(packet.getSender());
+			return;
+		}
+		player.lastUpdate = System.currentTimeMillis();
 		player.checkLocation();
 		player.setLocation(x, y);
 		player.updateBox();
@@ -51,6 +59,7 @@ public class ServerHandler implements IServerHandler
 	public void handleLeftPressPacket(CLeftPress packet)
 	{
 		PlayerMP player = server.getPlayer(packet.getSender());
+		player.lastUpdate = System.currentTimeMillis();
 		int px = player.lastValidLocation.getIntX() + 16;
 		int py = player.lastValidLocation.getIntY() + 16;
 		server.sendPacket(new SSpawnParticle(px, py, 0, 16));
@@ -79,17 +88,31 @@ public class ServerHandler implements IServerHandler
 		if (player != null)
 		{
 			player.setName(packet.getName());
+			player.lastUpdate = System.currentTimeMillis();
 			server.sendPacketWithException(new SSetName(packet.getName(), player.getNetworkId()), packet.getSender());
 		} else
 		{
-			System.err.println("Can't find player from datagram: " + packet.getSender().getAddress().getHostAddress() + ":" + packet.getSender().getPort());
+			printCantFindPlayerErrorMessage(packet.getSender());
 		}
 	}
 	
 	@Override
 	public void handleChat(CChat packet)
 	{
+		PlayerMP player = server.getPlayer(packet.getSender());
+		if (player != null)
+		{
+			player.lastUpdate = System.currentTimeMillis();
+		} else
+		{
+			printCantFindPlayerErrorMessage(packet.getSender());
+		}
 		server.sendPacket(new SChat(packet.getText(), server.getPlayer(packet.getSender()).getNetworkId()));
+	}
+	
+	private void printCantFindPlayerErrorMessage(DatagramPacket datagram)
+	{
+		System.err.println("Can't find player from datagram: " + datagram.getAddress().getHostAddress() + ":" + datagram.getPort());
 	}
 
 }

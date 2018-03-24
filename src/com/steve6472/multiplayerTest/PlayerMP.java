@@ -27,6 +27,8 @@ public class PlayerMP extends BaseEntity
 	public int score = 0;
 	public boolean checkLocation = true;
 	public String name = "unnamed";
+	public long lastUpdate = 0;
+	public int worldId = 0;
 	
 	private static int nextNetworkId;
 
@@ -43,6 +45,7 @@ public class PlayerMP extends BaseEntity
 		this.ip = ip;
 		this.port = port;
 		this.networkId = nextNetworkId++;
+		lastUpdate = System.currentTimeMillis();
 		this.setLocation(x, y);
 	}
 	

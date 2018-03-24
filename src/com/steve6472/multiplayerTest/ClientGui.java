@@ -171,8 +171,6 @@ public class ClientGui extends Gui
 	@Override
 	public void render(Screen screen)
 	{
-//		Background.renderFrame(screen, getMainApp());
-		
 		if (world != null)
 			world.render(screen);
 		
@@ -180,33 +178,34 @@ public class ClientGui extends Gui
 		{
 			int px = p.getLocation().getIntX();
 			int py = p.getLocation().getIntY();
-			screen.fillRect(px, py, 32, 32, 0xffff0000);
+			MultiplayerTest.drawSquare(px, py, 32, 32, 0xffff0000);
 			String score = "Score:" + p.score;
 			String id = "#" + p.getNetworkId();
 			String name = p.getPlayerName();
-			font.render(name, px + 16 - name.length() * 4, py + 16);
-			font.render(id, px + 16 - id.length() * 4, py);
-			font.render(score, px + 16 - score.length() * 4, py + 8);
+			MultiplayerTest.drawFont(mainApp, name, px + 16 - name.length() * 4, py + 16);
+			MultiplayerTest.drawFont(mainApp, id, px + 16 - id.length() * 4, py);
+			MultiplayerTest.drawFont(mainApp, score, px + 16 - score.length() * 4, py + 8);
 		}
 
-		font.render("Score: " + score, 5, 30);
-
-		screen.fillRect(loc.getIntX(), loc.getIntY(), 32, 32, 0xff0000ff);
+		MultiplayerTest.drawSquare(loc.getIntX(), loc.getIntY(), 32, 32, 0xff0000ff);
 
 		bullets.render(screen);
 		particles.render(screen);
+
+		MultiplayerTest.drawFont(mainApp, "UPS:" + mainApp.getFPS(), 5, 5);
+		MultiplayerTest.drawFont(mainApp, "Score: " + score, 5, 15);
 		
 		int baseY = getMainApp().getCurrentHeight() - 27;
 		
 		for (int i = 0; i < chatText.size(); i++)
 		{
-			font.render(chatText.get(i), 5, baseY - 10 * i);
+			MultiplayerTest.drawFont(mainApp, chatText.get(i), 5, baseY - 10 * i);
 		}
 		
 		if (openedChat)
 		{
-			screen.fillRect(0, getMainApp().getCurrentHeight() - 10, 8 * 64 + 4, 10, 0x80000000);
-			font.render(chatFieldText, 2, getMainApp().getCurrentHeight() - 9);
+			MultiplayerTest.drawSquare(0, mainApp.getCurrentHeight() - 10, 8 * 64 + 4, 10, 0x80000000);
+			MultiplayerTest.drawFont(mainApp, chatFieldText, 2, getMainApp().getCurrentHeight() - 9);
 		}
 	}
 

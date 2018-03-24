@@ -73,6 +73,7 @@ public class MenuGui extends Gui
 			{
 				((MultiplayerTest) getMainApp()).serverGui.showGui();
 				hideGui();
+				getMainApp().resetOrtho();
 			}
 		});
 		addComponent(runServer);
@@ -88,6 +89,7 @@ public class MenuGui extends Gui
 				ClientGui.name = name.getText();
 				((MultiplayerTest) getMainApp()).clientGui.showGui();
 				hideGui();
+				getMainApp().resetOrtho();
 			}
 		});
 		addComponent(runClient);
