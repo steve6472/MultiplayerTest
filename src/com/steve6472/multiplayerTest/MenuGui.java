@@ -71,7 +71,7 @@ public class MenuGui extends Gui
 			@Override
 			public void click()
 			{
-				((MultiplayerTest) getMainApp()).serverGui.showGui();
+				((Game) getMainApp()).serverGui.showGui();
 				hideGui();
 				getMainApp().resetOrtho();
 			}
@@ -87,7 +87,7 @@ public class MenuGui extends Gui
 			public void click()
 			{
 				ClientGui.name = name.getText();
-				((MultiplayerTest) getMainApp()).clientGui.showGui();
+				((Game) getMainApp()).clientGui.showGui();
 				hideGui();
 				getMainApp().resetOrtho();
 			}

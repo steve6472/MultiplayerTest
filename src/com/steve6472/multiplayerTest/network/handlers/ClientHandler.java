@@ -7,57 +7,48 @@
 
 package com.steve6472.multiplayerTest.network.handlers;
 
-import java.util.Arrays;
+import java.util.Iterator;
+import java.util.List;
 
 import com.steve6472.multiplayerTest.ClientGui;
-import com.steve6472.multiplayerTest.MultiplayerTest;
+import com.steve6472.multiplayerTest.Event;
+import com.steve6472.multiplayerTest.GameParticle;
+import com.steve6472.multiplayerTest.Game;
 import com.steve6472.multiplayerTest.PlayerMP;
 import com.steve6472.multiplayerTest.World;
 import com.steve6472.multiplayerTest.network.Client;
-import com.steve6472.multiplayerTest.network.packets.server.SChangeTile;
+import com.steve6472.multiplayerTest.network.packets.server.SAddEvent;
 import com.steve6472.multiplayerTest.network.packets.server.SChat;
 import com.steve6472.multiplayerTest.network.packets.server.SConnectPlayer;
 import com.steve6472.multiplayerTest.network.packets.server.SDeleteBullet;
 import com.steve6472.multiplayerTest.network.packets.server.SDisconnectPlayer;
+import com.steve6472.multiplayerTest.network.packets.server.SPingResponse;
+import com.steve6472.multiplayerTest.network.packets.server.SRotate;
+import com.steve6472.multiplayerTest.network.packets.server.SRunEvent;
 import com.steve6472.multiplayerTest.network.packets.server.SSetName;
 import com.steve6472.multiplayerTest.network.packets.server.SSetNetworkId;
 import com.steve6472.multiplayerTest.network.packets.server.SSetScore;
 import com.steve6472.multiplayerTest.network.packets.server.SSpawnBullet;
 import com.steve6472.multiplayerTest.network.packets.server.SSpawnParticle;
 import com.steve6472.multiplayerTest.network.packets.server.STeleportPlayer;
-import com.steve6472.multiplayerTest.network.packets.server.SSetWorld;
-import com.steve6472.sge.gfx.Sprite;
+import com.steve6472.multiplayerTest.network.packets.server.world.SAddWorld;
+import com.steve6472.multiplayerTest.network.packets.server.world.SChangeTile;
+import com.steve6472.multiplayerTest.network.packets.server.world.SDeleteWorld;
+import com.steve6472.multiplayerTest.network.packets.server.world.SReplaceWorld;
+import com.steve6472.multiplayerTest.network.packets.server.world.SSetWorld;
 import com.steve6472.sge.main.Util;
-import com.steve6472.sge.main.game.particle.AngledParticle;
 
 public class ClientHandler implements IClientHandler
 {
 	
 	private final Client client;
 	private final ClientGui clientGui;
-	private Sprite[] particleTypes;
+//	private Sprite[] particleTypes;
 	
 	public ClientHandler(Client client, ClientGui clientGui)
 	{
 		this.client = client;
 		this.clientGui = clientGui;
-
-		int[] size2 = new int[2 * 2];
-		Arrays.fill(size2, 0xffff0000);
-
-		int[] size3 = new int[3 * 3];
-		Arrays.fill(size3, 0xffff0000);
-
-		int[] size4 = new int[4 * 4];
-		Arrays.fill(size4, 0xffff0000);
-		
-		particleTypes = new Sprite[]
-		{
-				new Sprite(new int[] {0xffff0000}, 1, 1),
-				new Sprite(size2, 2, 2),
-				new Sprite(size3, 3, 3),
-				new Sprite(size4, 4, 4)
-		};
 	}
 
 	@Override
@@ -120,31 +111,25 @@ public class ClientHandler implements IClientHandler
 	@Override
 	public void handleSpawnParticlePacket(SSpawnParticle packet)
 	{
-		switch (packet.getParticleType())
+		//Util.getRandomInt(3, 1, Util.getRandomLong(i, Long.MIN_VALUE, packet.getSeed()))
+		World world = clientGui.getWorld(packet.getWorldId());
+		
+		for (int i = 0; i < packet.getCount(); i++)
 		{
-		default:
-			for (int i = 0; i < packet.getCount(); i++)
-				clientGui.particles
-						.add(new AngledParticle(packet.getX(), packet.getY(),
-								Util.getRandomDouble(360, 0, Util.getRandomLong(i, Long.MIN_VALUE, packet.getSeed())),
-								Util.getRandomInt(20, 10, Util.getRandomLong(i, Long.MIN_VALUE, packet.getSeed())),
-								particleTypes[Util.getRandomInt(3, 1, Util.getRandomLong(i, Long.MIN_VALUE, packet.getSeed()))]));
-			break;
+			double ang = Util.getRandomDouble(360, 0, Util.getRandomLong(i, Long.MIN_VALUE, packet.getSeed()));
+			GameParticle particle = new GameParticle(
+					packet.getX(), 
+					packet.getY(),
+					ang,
+					Util.getRandomInt(20, 10, Util.getRandomLong(i, Long.MIN_VALUE, packet.getSeed())),
+					packet.getHitId(),
+					0,
+					1,
+					packet.getSeed());
+			particle.rotation = (float) ang + Util.getRandomFloat(30, -30);
+			particle.bigData.setDouble(0, Util.getRandomDouble(1.48d + 0.5d, 1.48d - 0.5d));
+			world.particles.add(particle);
 		}
-	}
-
-	@Override
-	public void handleSetWorld(SSetWorld packet)
-	{
-		World world = new World(packet.getTilesX(), packet.getTilesY(), packet.getWorldId(), MultiplayerTest.camera, clientGui.getMainApp());
-		world.setTiles(packet.getTiles());
-		clientGui.world = world;
-	}
-	
-	@Override
-	public void handleChangeTile(SChangeTile packet)
-	{
-		clientGui.world.setTile(packet.getId(), packet.getIndex());
 	}
 	
 	@Override
@@ -185,25 +170,130 @@ public class ClientHandler implements IClientHandler
 		//Server message
 		if (packet.getNetworkId() == -1)
 		{
-			clientGui.chatText.add(packet.getText());
+			addMessage(packet.getText());
 		} else
 		{
 			if (client.networkId == packet.getNetworkId())
 			{
-				clientGui.chatText.add("<" + ClientGui.name + "> " + packet.getText());
+				addMessage("<" + ClientGui.name + "> " + packet.getText());
 			} else
 			{
 				PlayerMP player = client.getPlayer(packet.getNetworkId());
 				
 				if (player != null)
-					clientGui.chatText.add("<" + client.getPlayer(packet.getNetworkId()).getPlayerName() + "> " + packet.getText());
+					addMessage("<" + client.getPlayer(packet.getNetworkId()).getPlayerName() + "> " + packet.getText());
 				else
-					clientGui.chatText.add("<" + "invalidId" + "> " + packet.getText());
+					addMessage("<" + "invalidId" + "> " + packet.getText());
 			}
 		}
 		
 		if (clientGui.chatText.size() > 8)
-			clientGui.chatText.remove(0);
+			clientGui.chatText.remove(8);
+	}
+	
+	/*
+	 * World Handlers
+	 */
+	
+	@Override
+	public void handleChangeTile(SChangeTile packet)
+	{
+		World world = clientGui.getWorld(packet.getWorldId());
+		world.setTile(packet.getId(), packet.getIndex(), false);
+	}
+
+	@Override
+	public void handleSetWorld(SSetWorld packet)
+	{
+		clientGui.world = clientGui.getWorld(packet.getWorldId());
+	}
+	
+	@Override
+	public void handleAddWorld(SAddWorld packet)
+	{
+		World world = new World(packet.getTilesX(), packet.getTilesY(), packet.getWorldId(), null, Game.camera, clientGui.getMainApp());
+		world.setTiles(packet.getTiles());
+		clientGui.worlds.add(world);
+	}
+	
+	@Override
+	public void handleDeleteWorld(SDeleteWorld packet)
+	{
+		for (Iterator<World> iter = clientGui.worlds.iterator(); iter.hasNext();)
+		{
+			World w = iter.next();
+			if (w.getWorldId() == packet.getWorldId())
+			{
+				iter.remove();
+				break;
+			}
+		}
+	}
+	
+	@Override
+	public void handleReplaceWorld(SReplaceWorld packet)
+	{
+		int i = 0;
+		for (int index = 0; index < clientGui.worlds.size(); index++)
+		{
+			if (clientGui.worlds.get(index).getWorldId() == packet.getReplaceId())
+			{
+				i = index;
+				break;
+			}
+		}
+		World world = new World(packet.getTilesX(), packet.getTilesY(), packet.getWorldId(), null, Game.camera, clientGui.getMainApp());
+		world.setTiles(packet.getTiles());
+		clientGui.worlds.set(i, world);
+	}
+	
+	@Override
+	public void handleAddEvent(SAddEvent packet)
+	{
+		clientGui.addEvent(packet.getEvent().getId(), packet.getEvent());
+	}
+	
+	@Override
+	public void handleRunEvent(SRunEvent packet)
+	{
+		Event event = clientGui.events.get(packet.getEventId());
+		event.runEvent(clientGui, packet.getData());
+	}
+	
+	@Override
+	public void handleRotation(SRotate packet)
+	{
+		PlayerMP player = client.getPlayer(packet.getNetworkId());
+		player.setAngle(packet.getDegree());
+	}
+	
+	private void addMessage(String text)
+	{
+		clientGui.chatText.add(text);
+		shiftRight(clientGui.chatText);
+	}
+	
+	public void shiftRight(List<String> list) 
+	{
+		if (list.size() == 0)
+			return;
+		// make temp variable to hold last element
+		String temp = list.get(list.size() - 1);
+
+		// make a loop to run through the array list
+		for (int i = list.size() - 1; i > 0; i--)
+		{
+			// set the last element to the value of the 2nd to last element
+			list.set(i, list.get(i - 1));
+		}
+		// set the first element to be the last element
+		list.set(0, temp);
+	}
+	
+	@Override
+	public void handlePingResponse(SPingResponse packet)
+	{
+		clientGui.ping = System.currentTimeMillis() - clientGui.pingStart;
 	}
 
 }

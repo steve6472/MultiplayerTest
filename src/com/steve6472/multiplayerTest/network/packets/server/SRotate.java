@@ -1,6 +1,6 @@
 /**********************
 * Created by steve6472 (Mirek Jozefek)
-* On date: 3. 3. 2018
+* On date: 14. 4. 2018
 * Project: MultiplayerTest
 *
 ***********************/
@@ -11,49 +11,50 @@ import com.steve6472.multiplayerTest.network.handlers.IClientHandler;
 import com.steve6472.sge.main.networking.packet.DataStream;
 import com.steve6472.sge.main.networking.packet.Packet;
 
-public class SChangeTile extends Packet<IClientHandler>
+public class SRotate extends Packet<IClientHandler>
 {
-	int index;
-	int id;
+
+	double deg;
+	int networkId;
 	
-	public SChangeTile(int index, int id)
+	public SRotate(int networkId, double deg)
 	{
-		this.index = index;
-		this.id = id;
+		this.networkId = networkId;
+		this.deg = deg;
 	}
 	
-	public SChangeTile()
+	public SRotate()
 	{
 	}
 
 	@Override
 	public void output(DataStream output)
 	{
-		output.writeInt(index);
-		output.writeInt(id);
+		output.writeInt(networkId);
+		output.writeDouble(deg);
 	}
 
 	@Override
 	public void input(DataStream input)
 	{
-		this.index = input.readInt();
-		this.id = input.readInt();
+		this.networkId = input.readInt();
+		this.deg = input.readDouble();
 	}
 
 	@Override
 	public void handlePacket(IClientHandler handler)
 	{
-		handler.handleChangeTile(this);
-	}
-
-	public int getIndex()
-	{
-		return index;
+		handler.handleRotation(this);
 	}
 	
-	public int getId()
+	public double getDegree()
 	{
-		return id;
+		return deg;
+	}
+	
+	public int getNetworkId()
+	{
+		return networkId;
 	}
 
 }

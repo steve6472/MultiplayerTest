@@ -18,7 +18,7 @@ public class WallStructure1 extends Structure
 	public int[] getStructure()
 	{
 		return new int[] {2, 1, 9,
-						  9, 5, 6,
+						  6, 5, 6,
 						  6, 6, 6,
 						  3, 1, 9};
 	}

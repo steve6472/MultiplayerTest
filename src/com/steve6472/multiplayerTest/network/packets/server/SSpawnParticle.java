@@ -7,6 +7,7 @@
 
 package com.steve6472.multiplayerTest.network.packets.server;
 
+import com.steve6472.multiplayerTest.World;
 import com.steve6472.multiplayerTest.network.handlers.IClientHandler;
 import com.steve6472.sge.main.Util;
 import com.steve6472.sge.main.networking.packet.DataStream;
@@ -17,17 +18,24 @@ public class SSpawnParticle extends Packet<IClientHandler>
 
 	int x;
 	int y;
-	int particleType;
+	int hitId;
 	int count;
+	int worldId;
 	long seed;
 	
-	public SSpawnParticle(int x, int y, int particleType, int count)
+	public SSpawnParticle(int x, int y, int hitId, int count, int worldId)
 	{
 		this.x = x;
 		this.y = y;
-		this.particleType = particleType;
+		this.hitId = hitId;
 		this.count = count;
+		this.worldId = worldId;
 		seed = Util.getRandomLong(Long.MAX_VALUE - count, Long.MIN_VALUE);
+	}
+	
+	public SSpawnParticle(int x, int y, int hitId, int count, World world)
+	{
+		this(x, y, hitId, count, world.getWorldId());
 	}
 
 	public SSpawnParticle()
@@ -39,8 +47,9 @@ public class SSpawnParticle extends Packet<IClientHandler>
 	{
 		output.writeInt(x);
 		output.writeInt(y);
-		output.writeInt(particleType);
+		output.writeInt(hitId);
 		output.writeInt(count);
+		output.writeInt(worldId);
 		output.writeLong(seed);
 	}
 
@@ -49,14 +58,15 @@ public class SSpawnParticle extends Packet<IClientHandler>
 	{
 		this.x = input.readInt();
 		this.y = input.readInt();
-		this.particleType = input.readInt();
+		this.hitId = input.readInt();
 		this.count = input.readInt();
+		this.worldId = input.readInt();
 		this.seed = input.readLong();
 	}
 	
-	public int getParticleType()
+	public int getHitId()
 	{
-		return particleType;
+		return hitId;
 	}
 	
 	public int getX()
@@ -77,6 +87,11 @@ public class SSpawnParticle extends Packet<IClientHandler>
 	public long getSeed()
 	{
 		return seed;
+	}
+	
+	public int getWorldId()
+	{
+		return worldId;
 	}
 
 	@Override

@@ -8,7 +8,7 @@
 package com.steve6472.multiplayerTest.network.packets.server;
 
 import com.steve6472.multiplayerTest.Bullet;
-import com.steve6472.multiplayerTest.MultiplayerTest;
+import com.steve6472.multiplayerTest.Game;
 import com.steve6472.multiplayerTest.network.handlers.IClientHandler;
 import com.steve6472.sge.main.networking.packet.DataStream;
 import com.steve6472.sge.main.networking.packet.Packet;
@@ -61,7 +61,7 @@ public class SSpawnBullet extends Packet<IClientHandler>
 	
 	public Bullet createBullet()
 	{
-		Bullet b = (Bullet) MultiplayerTest.entityList.getEntity(0, networkId, shooterNetworkId);
+		Bullet b = (Bullet) Game.entityList.getEntity(0, networkId, shooterNetworkId);
 		b.setSpeed(8);
 		b.setLocation(x, y);
 		b.setMotion(xa, ya);

@@ -31,7 +31,7 @@ public abstract class Structure
 	{
 		if (x < 0 || y < 0 || x >= world.getTilesX() || y >= world.getTilesY())
 			return;
-		world.setTile(id, x, y);
+		world.setTile(id, x, y, false);
 	}
 
 }

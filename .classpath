@@ -5,5 +5,8 @@
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/SGE2"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/LWJGL3"/>
+	<classpathentry kind="lib" path="D:/jars/jgap/jgap.jar" sourcepath="D:/jars/jgapsrc/src"/>
+	<classpathentry kind="lib" path="D:/jars/jgap/jgap-examples.jar"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/JGAP"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

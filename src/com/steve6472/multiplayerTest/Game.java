@@ -8,51 +8,71 @@
 package com.steve6472.multiplayerTest;
 
 import static org.lwjgl.glfw.GLFW.*;
-import static org.lwjgl.opengl.GL11.*;
 
 import org.joml.Matrix4f;
 import org.joml.Vector4f;
 
 import com.steve6472.multiplayerTest.network.packets.client.CChat;
-import com.steve6472.multiplayerTest.network.packets.client.CLeftPress;
-import com.steve6472.multiplayerTest.network.packets.client.CLeftRelease;
+import com.steve6472.multiplayerTest.network.packets.client.CMouseButton;
 import com.steve6472.multiplayerTest.network.packets.client.CMovePacket;
+import com.steve6472.multiplayerTest.network.packets.client.CPing;
 import com.steve6472.multiplayerTest.network.packets.client.CRequestTile;
+import com.steve6472.multiplayerTest.network.packets.client.CRotate;
 import com.steve6472.multiplayerTest.network.packets.client.CSetName;
-import com.steve6472.multiplayerTest.network.packets.server.SChangeTile;
+import com.steve6472.multiplayerTest.network.packets.client.CUpdatePacket;
+import com.steve6472.multiplayerTest.network.packets.server.SAddEvent;
 import com.steve6472.multiplayerTest.network.packets.server.SChat;
 import com.steve6472.multiplayerTest.network.packets.server.SConnectPlayer;
 import com.steve6472.multiplayerTest.network.packets.server.SDeleteBullet;
 import com.steve6472.multiplayerTest.network.packets.server.SDisconnectPlayer;
+import com.steve6472.multiplayerTest.network.packets.server.SPingResponse;
+import com.steve6472.multiplayerTest.network.packets.server.SRotate;
+import com.steve6472.multiplayerTest.network.packets.server.SRunEvent;
 import com.steve6472.multiplayerTest.network.packets.server.SSetName;
 import com.steve6472.multiplayerTest.network.packets.server.SSetNetworkId;
 import com.steve6472.multiplayerTest.network.packets.server.SSetScore;
-import com.steve6472.multiplayerTest.network.packets.server.SSetWorld;
 import com.steve6472.multiplayerTest.network.packets.server.SSpawnBullet;
 import com.steve6472.multiplayerTest.network.packets.server.SSpawnParticle;
 import com.steve6472.multiplayerTest.network.packets.server.STeleportPlayer;
+import com.steve6472.multiplayerTest.network.packets.server.world.SAddWorld;
+import com.steve6472.multiplayerTest.network.packets.server.world.SChangeTile;
+import com.steve6472.multiplayerTest.network.packets.server.world.SDeleteWorld;
+import com.steve6472.multiplayerTest.network.packets.server.world.SReplaceWorld;
+import com.steve6472.multiplayerTest.network.packets.server.world.SSetWorld;
+import com.steve6472.multiplayerTest.structures.FlowerStructure;
+import com.steve6472.multiplayerTest.structures.Grass0;
+import com.steve6472.multiplayerTest.structures.Grass1;
+import com.steve6472.multiplayerTest.structures.Lake;
+import com.steve6472.multiplayerTest.structures.Structure;
+import com.steve6472.multiplayerTest.structures.WallStructure0;
+import com.steve6472.multiplayerTest.structures.WallStructure1;
+import com.steve6472.multiplayerTest.structures.WallStructure2;
+import com.steve6472.multiplayerTest.structures.WallStructure3;
+import com.steve6472.multiplayerTest.structures.WallStructure4;
 import com.steve6472.sge.gfx.Font;
 import com.steve6472.sge.gfx.Model;
 import com.steve6472.sge.gfx.Screen;
 import com.steve6472.sge.gfx.Shader;
+import com.steve6472.sge.gfx.Sprite;
 import com.steve6472.sge.gfx.Texture;
 import com.steve6472.sge.main.MainApplication;
+import com.steve6472.sge.main.callbacks.KeyCallback;
 import com.steve6472.sge.main.game.EntityList;
 import com.steve6472.sge.main.networking.packet.DisconnectPacket;
 import com.steve6472.sge.main.networking.packet.Packet;
 import com.steve6472.sge.test.Camera;
 import com.steve6472.sge.test.ShaderTest2;
 
-public class MultiplayerTest extends MainApplication
+public class Game extends MainApplication
 {
 	public ServerGui serverGui;
 	public ClientGui clientGui;
 	
 	public static EntityList entityList;
-	public static Camera camera;
+	public static GameCamera camera;
 	
-	public static Model model;
-	public static Shader shader;
+	public static Model tileModel, fullModel;
+	public static Shader shader, shaderSub;
 	
 	public static Shader fontShader;
 	public static Model fontModel;
@@ -63,6 +83,27 @@ public class MultiplayerTest extends MainApplication
 	public static Model shadeModelLine0, shadeModelLine1, shadeModelLine2, shadeModelLine3;
 	public static Model shadeModelCornerIn0, shadeModelCornerIn5, shadeModelCornerIn2, shadeModelCornerIn4;
 	public static Model shadeModelCornerOut0, shadeModelCornerOut5, shadeModelCornerOut2, shadeModelCornerOut4;
+	public static Model pixelModel, pixelModel32, pixelModel16, pixelModel8, pixelModel4, pixelModel3, pixelModel2, pixelModel1;
+	
+	public static Sprite sprites;
+	
+	public static Structure[] structures;
+	
+	static
+	{
+		structures = new Structure[]
+				{ 
+						new WallStructure0(), 
+						new WallStructure1(), 
+						new Lake(), 
+						new FlowerStructure(), 
+						new WallStructure3(), 
+						new WallStructure2(),
+						new WallStructure4(),
+						new Grass0(),
+						new Grass1()
+				};
+	}
 	
 	@Override
 	public void init()
@@ -79,8 +120,8 @@ public class MultiplayerTest extends MainApplication
 		Packet.addPacket(5, 	SSpawnBullet.class);
 		Packet.addPacket(6, 	SSpawnParticle.class);
 		Packet.addPacket(7, 	STeleportPlayer.class);
-		Packet.addPacket(8, 	CLeftPress.class);
-		Packet.addPacket(9, 	CLeftRelease.class);
+		Packet.addPacket(8, 	CMouseButton.class);
+		Packet.addPacket(9, 	CRotate.class);
 		Packet.addPacket(10, 	CMovePacket.class);
 		Packet.addPacket(11, 	SSetWorld.class);
 		Packet.addPacket(12, 	SChangeTile.class);
@@ -91,8 +132,19 @@ public class MultiplayerTest extends MainApplication
 		Packet.addPacket(17, 	CSetName.class);
 		Packet.addPacket(18, 	SChat.class);
 		Packet.addPacket(19, 	CChat.class);
+		Packet.addPacket(20, 	CUpdatePacket.class);
+		Packet.addPacket(21, 	CPing.class);
+		Packet.addPacket(22, 	SPingResponse.class);
+		Packet.addPacket(23, 	SAddWorld.class);
+		Packet.addPacket(24, 	SDeleteWorld.class);
+		Packet.addPacket(25, 	SReplaceWorld.class);
+		Packet.addPacket(26, 	SAddEvent.class);
+		Packet.addPacket(27, 	SRunEvent.class);
+		Packet.addPacket(28, 	SRotate.class);
 		
-		camera = new Camera();
+		sprites = new Sprite("sprites.png");
+		
+		camera = new GameCamera();
 		camera.setSize(getWidth(), getHeight());
 
 		serverGui = new ServerGui(this);
@@ -101,8 +153,18 @@ public class MultiplayerTest extends MainApplication
 		fontShader = new Shader("shaders\\basev2");
 		fontModel = new Model(ShaderTest2.fillScreen(), ShaderTest2.createTexture(8, 8, getFont().getFont()), ShaderTest2.createArray(0));
 
+		fullModel = new Model(ShaderTest2.fillScreen(), ShaderTest2.createBasicTexture(), ShaderTest2.createArray(0));
+
 		shader = new Shader("shaders\\basev2");
-		model = new Model(ShaderTest2.fillScreen(), ShaderTest2.createTexture(32, 32, Tile.atlas.getAtlas()), ShaderTest2.createArray(0));
+		shaderSub = new Shader("shaders\\basev2Sub");
+		tileModel = new Model(ShaderTest2.fillScreen(), ShaderTest2.createTexture(32, 32, Tile.atlas.getAtlas()), ShaderTest2.createArray(0));
+		pixelModel1 = new Model(ShaderTest2.fillScreen(), ShaderTest2.createTexture(1, 1, sprites), ShaderTest2.createArray(0));
+		pixelModel2 = new Model(ShaderTest2.fillScreen(), ShaderTest2.createTexture(2, 2, sprites), ShaderTest2.createArray(0));
+		pixelModel3 = new Model(ShaderTest2.fillScreen(), ShaderTest2.createTexture(3, 3, sprites), ShaderTest2.createArray(0));
+		pixelModel4 = new Model(ShaderTest2.fillScreen(), ShaderTest2.createTexture(4, 4, sprites), ShaderTest2.createArray(0));
+		pixelModel8 = new Model(ShaderTest2.fillScreen(), ShaderTest2.createTexture(8, 8, sprites), ShaderTest2.createArray(0));
+		pixelModel16 = new Model(ShaderTest2.fillScreen(), ShaderTest2.createTexture(16, 16, sprites), ShaderTest2.createArray(0));
+		pixelModel32 = new Model(ShaderTest2.fillScreen(), ShaderTest2.createTexture(32, 32, sprites), ShaderTest2.createArray(0));
 		
 		shadeModelLine0 = new Model(ShaderTest2.fillScreen(), ShaderTest2.createTexture(1, 1, t), createLine());
 		shadeModelLine1 = new Model(ShaderTest2.fillScreen1(), ShaderTest2.createTexture(1, 1, t), createLine());
@@ -122,6 +184,30 @@ public class MultiplayerTest extends MainApplication
 		tileShade = new Shader("shaders\\shade");
 		rectShader = new Shader("shaders\\rect");
 		
+		Helper.initHelper();
+
+		getKeyHandler().addKeyCallback(new KeyCallback()
+		{
+			@Override
+			public void invoke(int key, int scancode, int action, int mods)
+			{
+				if (key == GLFW_KEY_F2 && action == GLFW_PRESS)
+				{
+					takeScreenshot();
+				}
+			}
+		});
+		
+//		addBasicResizeOrtho();
+//		addWindowSizeCallback(new WindowSizeCallback()
+//		{
+//			@Override
+//			public void invoke(int width, int height)
+//			{
+//				camera.setSize(width, height);
+//			}
+//		});
+
 		new MenuGui(this);
 	}
 	
@@ -197,6 +283,58 @@ public class MultiplayerTest extends MainApplication
 		fontModel.render();
 	}
 	
+	public static void drawSprite(Model model, Shader shader, Sprite sprite)
+	{
+		Matrix4f target = new Matrix4f();
+		
+		Camera camera = Game.camera;
+		
+		camera.getProjection().mul(Helper.toMatrix(), target);
+
+		if (sprite != null)
+			sprite.bind();
+		
+		if (shader != null)
+		{
+			shader.bind();
+
+			shader.setUniform1f("sampler", 0);
+			shader.setUniform4f("col", Helper.getRed(), Helper.getGreen(), Helper.getBlue(), Helper.getAlpha());
+
+			shader.setUniformMat4f("projection", target);
+		}
+		
+		model.render();
+	}
+	
+	public static void drawSpriteFromAtlas(float indexX, float indexY, Model model, Shader shader, Sprite sprite)
+	{
+		if (!Helper.isInitialised())
+			return;
+		
+		Matrix4f target = new Matrix4f();
+		
+		Camera camera = Game.camera;
+		
+		camera.getProjection().mul(Helper.toMatrix(), target);
+		
+		if (sprite != null)
+			sprite.bind();
+		
+		if (shader != null)
+		{
+			shader.bind();
+			
+			shader.setUniform1f("sampler", 0);
+			shader.setUniform2f("texture", indexX, indexY);
+			shader.setUniform4f("col", Helper.getRed(), Helper.getGreen(), Helper.getBlue(), Helper.getAlpha());
+			
+			shader.setUniformMat4f("projection", target);
+		}
+		
+		model.render();
+	}
+	
 	public static void drawSquare(float x, float y, float w, float h, int color)
 	{
 		Matrix4f pro = new Matrix4f()
@@ -218,7 +356,7 @@ public class MultiplayerTest extends MainApplication
 		rectShader.setUniform4f("color", colors[0], colors[1], colors[2], colors[3]);
 		rectShader.setUniformMat4f("projection", target);
 		
-		model.render();
+		tileModel.render();
 	}
 
 	@Override
@@ -262,11 +400,12 @@ public class MultiplayerTest extends MainApplication
 	public void setWindowHints()
 	{
 //		glfwWindowHint(GLFW_DECORATED, GLFW_FALSE);
+//		glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
 	}
 	
 	public static void main(String[] args)
 	{
-		new MultiplayerTest();
+		new Game();
 	}
 
 }

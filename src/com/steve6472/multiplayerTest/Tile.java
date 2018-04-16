@@ -10,11 +10,12 @@ package com.steve6472.multiplayerTest;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.steve6472.sge.main.Util;
 import com.steve6472.sge.main.game.Atlas;
 
 public class Tile
 {
-	public static final Tile air = new Tile(0, "", false, false, 0);
+	public static final Tile air = new Tile(0, "", true, false, 0);
 	public static final Tile crackedWall0 = new Tile(1, "crackedWall0.png", true, true, 0);
 	public static final Tile crackedWall1 = new Tile(2, "crackedWall1.png", true, true, 0);
 	public static final Tile crackedWall2 = new Tile(3, "crackedWall2.png", true, true, 0);
@@ -25,6 +26,8 @@ public class Tile
 	public static final Tile sand = new Tile(8, "sand.png", false, false, 0);
 	public static final Tile wall = new Tile(9, "wall.png", true, true, 0);
 	public static final Tile water = new Tile(10, "water.png", true, false, 0);
+	public static final Tile wall1 = new Tile(11, "wall1.png", true, true, 0);
+	public static final Tile destroyedWall = new Tile(12, "destroyed_wall.png", false, false, 0);
 	
 	@SuppressWarnings("unused")
 	private static final Tile NULL = new Tile(-1, null, false, false, 0);
@@ -39,6 +42,8 @@ public class Tile
 //	private final Sprite sprite;
 	private final boolean isSolid;
 	private final boolean castShadow;
+	
+	public static int totalCount = 13;
 	
 	private int indexX = 0;
 	private int indexY = 0;
@@ -65,6 +70,8 @@ public class Tile
 		this.isSolid = isSolid;
 		this.light = light;
 		this.castShadow = castShadow;
+		
+		totalCount = Util.maxi(id, totalCount);
 		
 		sprites[id] = sprite;
 		tiles[id] = this;
@@ -129,6 +136,11 @@ public class Tile
 	public static Tile getTile(int id)
 	{
 		return tiles[id];
+	}
+	
+	public static Tile[] getTiles()
+	{
+		return tiles;
 	}
 	
 }

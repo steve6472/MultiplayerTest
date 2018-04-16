@@ -11,7 +11,6 @@ import com.steve6472.sge.gfx.Screen;
 import com.steve6472.sge.gfx.Sprite;
 import com.steve6472.sge.main.MainApplication;
 import com.steve6472.sge.main.game.BaseEntity;
-import com.steve6472.sge.main.game.Vec2;
 
 public class Bullet extends BaseEntity
 {
@@ -23,10 +22,9 @@ public class Bullet extends BaseEntity
 	@Override
 	public void render(Screen screen)
 	{
-		Vec2 loc = getLocation().clone().left().up();
-		screen.drawSprite(loc.getIntX(), loc.getIntY(), getSprite());
+		Game.drawSquare(loc.getIntX() - Game.camera.getX(), loc.getIntY() - Game.camera.getY(), 3, 3, 0xffff0000);
 	}
-
+	
 	private int life = 0;
 	public double drag = 1;
 	
