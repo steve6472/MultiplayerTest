@@ -52,9 +52,15 @@ public class SwingAnimationV2 extends KeyframedAnimation
 //		new KeyFrame(d).color_(0, 0, 0, 0).finish(SET);
 //		new KeyFrame(d).finish(SET);
 		float distance = 300;
-		new KeyFrame(0).translate_(distance, 0, 0).color_(1, 1, 1, 0).finish(SET);
-//		new KeyFrame(1).color_(1, 1, 1, 0).finish(SET);
-		new KeyFrame(60).translate_(-distance, 0, 0).addBezierCurvePoint(distance, 256, 0).finish(BRAZIER_SET);
+		new KeyFrame(0 ).translate_(distance, 0, 0).color_(1, 1, 1, 0).scale_(32).finish(SET);
+		new KeyFrame(30).scale_(64, 64, 32).finish(SET);
+		new KeyFrame(30).scale_(32, 64, 32).finish(SET);
+		new KeyFrame(30).scale_(32).finish(SET);
+		new KeyFrame(60).rotate_(180, 0, 0, 1).color_(1, 0, 0, 0).finish(SET, SET);
+		new KeyFrame(60).rotate_(0, 0, 0, 1).color_(0, 1, 0, 0).finish(SET, SET);
+		new KeyFrame(60).rotate_(180, 0, 0, 1).color_(0, 0, 1, 0).finish(SET, SET);
+		new KeyFrame(60).rotate_(0, 0, 0, 1).color_(1, 1, 1, 0).finish(SET, SET);
+		new KeyFrame(20).finish();
 	}
 
 	@Override
@@ -62,9 +68,9 @@ public class SwingAnimationV2 extends KeyframedAnimation
 			float rz)
 	{
 		Helper.pushLayer();
-		
 		Helper.translate(x, y, z);
-		Helper.scale(32);
+		Helper.rotate(ang, rx, ry, rz);
+		Helper.scale(sx, sy, sz);
 		Helper.color(r, g, b, a);
 		Game.drawSpriteFromAtlas(4f / 16f, 0, Game.pixelModel32, Game.shader, Game.sprites);
 		
