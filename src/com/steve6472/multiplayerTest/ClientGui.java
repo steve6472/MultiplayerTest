@@ -258,7 +258,7 @@ public class ClientGui extends Gui
 			animations.remove(i);
 //			animations.addObject(new SwingAnimationV2());
 		}
-		animations.addObject(new SwingAnimationV2());
+//		animations.addObject(new SwingAnimationV2());
 		
 		if (world != null)
 			world.tick();
