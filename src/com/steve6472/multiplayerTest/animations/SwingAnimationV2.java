@@ -61,6 +61,7 @@ public class SwingAnimationV2 extends KeyframedAnimation
 		new KeyFrame(60).rotate_(180, 0, 0, 1).color_(0, 0, 1, 0).finish(SET, SET);
 		new KeyFrame(60).rotate_(0, 0, 0, 1).color_(1, 1, 1, 0).finish(SET, SET);
 		new KeyFrame(20).finish();
+		new KeyFrame(60).translate_(-distance, 0, 0).color_(0, 0, 0, 0).addBezierCurvePoint(distance, 256, 0).finish(BRAZIER_SET, SET);
 	}
 
 	@Override
