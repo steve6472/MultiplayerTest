@@ -311,6 +311,21 @@ public abstract class KeyframedAnimation extends Animation
 		Util.printObjects(type, " X:", x, " Y:", y, " Z:", z, " R:", r, " G:", g, " B:", b, " A:", a, " SX:", sx, " SY:", sy, " SZ:", sz, " ANG:",
 				ang, " RZ:", rx, " RY:", ry, " RZ:", rz, "Time:", time, "Id:", currentId);
 	}
+	
+	private static float bezierMethod()
+	{
+	
+    float p = 0.001f;
+    float next = 1f;
+    float last = 0f;
+    for (int i = 0; i <= 100; i++)
+    {
+      float c = Util.bezierCurve(0, 0.30f + p, next, i, 100);
+      //print("Difference: " + (last - c));
+      last = c;
+      //print(c);
+      //print(calculateValue(i, 100, 0, 1));
+    }
 
 	protected abstract void render(float x, float y, float z, float r, float g, float b, float a, float sx, float sy, float sz, float ang, float rx, float ry, float rz);
 	
