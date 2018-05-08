@@ -7,7 +7,7 @@
 
 package com.steve6472.multiplayerTest.network.packets.server;
 
-import com.steve6472.multiplayerTest.World;
+import com.steve6472.multiplayerTest.GameWorld;
 import com.steve6472.multiplayerTest.network.handlers.IClientHandler;
 import com.steve6472.sge.main.Util;
 import com.steve6472.sge.main.networking.packet.DataStream;
@@ -33,7 +33,7 @@ public class SSpawnParticle extends Packet<IClientHandler>
 		seed = Util.getRandomLong(Long.MAX_VALUE - count, Long.MIN_VALUE);
 	}
 	
-	public SSpawnParticle(int x, int y, int hitId, int count, World world)
+	public SSpawnParticle(int x, int y, int hitId, int count, GameWorld world)
 	{
 		this(x, y, hitId, count, world.getWorldId());
 	}

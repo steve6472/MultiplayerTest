@@ -12,9 +12,14 @@ import java.net.InetAddress;
 import com.steve6472.sge.gfx.Screen;
 import com.steve6472.sge.gfx.Sprite;
 import com.steve6472.sge.main.MainApplication;
+import com.steve6472.sge.main.SGArray;
 import com.steve6472.sge.main.game.AABB;
 import com.steve6472.sge.main.game.BaseEntity;
 import com.steve6472.sge.main.game.Vec2;
+import com.steve6472.sge.main.game.inventory.Inventory;
+import com.steve6472.sge.main.game.inventory.ItemSlot;
+import com.steve6472.sge.main.game.world.Chunk;
+import com.steve6472.sge.main.game.world.GameTile;
 
 public class PlayerMP extends BaseEntity
 {
@@ -28,7 +33,23 @@ public class PlayerMP extends BaseEntity
 	public boolean checkLocation = true;
 	public String name = "unnamed";
 	public long lastUpdate = 0;
-	public int worldId = 0;
+	public int worldId;
+
+	public int lastChunkX = Integer.MIN_VALUE;
+	public int lastChunkY = Integer.MIN_VALUE;
+	
+	public int lastTileX = Integer.MIN_VALUE;
+	public int lastTileY = Integer.MIN_VALUE;
+	
+	/**
+	 * 0 		- not loaded
+	 * 1-127 	- load delay
+	 * -1 		- loaded
+	 */
+	public byte[] visitedChunks;
+	public SGArray<Integer> tickVCH;
+	
+	public byte slot = 0;
 	
 	private static int nextNetworkId;
 
@@ -47,6 +68,13 @@ public class PlayerMP extends BaseEntity
 		this.networkId = nextNetworkId++;
 		lastUpdate = System.currentTimeMillis();
 		this.setLocation(x, y);
+		
+		tickVCH = new SGArray<Integer>(0, true, true);
+		
+		setInventory(new Inventory(this, ItemSlot.class, 4));
+
+		lastChunkX = x / 32 / Chunk.chunkWidth;
+		lastChunkY = y / 32 / Chunk.chunkHeight;
 	}
 	
 	public void checkLocation()
@@ -132,6 +160,36 @@ public class PlayerMP extends BaseEntity
 	{
 		score++;
 		return score;
+	}
+	
+	public int getChunkX()
+	{
+		return (loc.getIntX() + 16) / Chunk.chunkWidth / GameTile.tileWidth;
+	}
+	
+	public int getChunkY()
+	{
+		return (loc.getIntY() + 16) / Chunk.chunkHeight / GameTile.tileHeight;
+	}
+	
+	public int getX()
+	{
+		return loc.getIntX() + 16;
+	}
+	
+	public int getY()
+	{
+		return loc.getIntY() + 16;
+	}
+	
+	public int getTileX()
+	{
+		return getX() / 32;
+	}
+	
+	public int getTileY()
+	{
+		return getY() / 32;
 	}
 
 }

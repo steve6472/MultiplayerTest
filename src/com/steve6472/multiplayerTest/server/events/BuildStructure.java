@@ -23,8 +23,7 @@ public class BuildStructure extends Event
 		int x = data.readInt();
 		int y = data.readInt();
 		int type = data.readInt();
-		int worldId = data.readInt();
-		Game.structures[type].generateStructure(x, y, clientGui.getWorld(worldId));
+		Game.structures[type].generateStructure(x, y, clientGui.world);
 	}
 
 	@Override

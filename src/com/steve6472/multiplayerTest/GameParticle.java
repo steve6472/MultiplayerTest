@@ -7,12 +7,19 @@
 
 package com.steve6472.multiplayerTest;
 
+import org.joml.Matrix4f;
+
+import com.steve6472.sge.gfx.Helper;
+import com.steve6472.sge.gfx.Model;
 import com.steve6472.sge.gfx.Screen;
 import com.steve6472.sge.gfx.Shader;
 import com.steve6472.sge.main.SArray;
 import com.steve6472.sge.main.Util;
+import com.steve6472.sge.main.game.Atlas;
 import com.steve6472.sge.main.game.Vec2;
 import com.steve6472.sge.main.game.particle.AngledParticle;
+import com.steve6472.sge.main.game.world.GameCamera;
+import com.steve6472.sge.test.Camera;
 
 public class GameParticle extends AngledParticle
 {
@@ -64,10 +71,11 @@ public class GameParticle extends AngledParticle
 		super(x, y, angle, life, null);
 		maxLife = life;
 		originalLocation = new Vec2(x, y);
-		int hitX = hitId % Tile.atlas.getSize();
-		int hitY = hitId / Tile.atlas.getSize();
-		indexX = hitX / (float) Tile.atlas.getSize();
-		indexY = hitY / (float) Tile.atlas.getSize();
+		Atlas a = ClientGui.getAtlas();
+		int hitX = hitId % a.getSize();
+		int hitY = hitId / a.getSize();
+		indexX = hitX / (float) a.getSize();
+		indexY = hitY / (float) a.getSize();
 		this.moveStyle = bigMoveStyle;
 		this.smallMoveStyle = smallMoveStyle;
 		
@@ -118,7 +126,6 @@ public class GameParticle extends AngledParticle
 		//Scale it so we can actually see it
 		Helper.scale(4);
 		
-		Shader shader = Game.shader;
 		//Change visibility
 		if (!revertVisibility)
 			Helper.color(0.0f, 0.0f, 0.0f, (1f / (float) maxLife) * (float) life - 0.95f);
@@ -130,9 +137,30 @@ public class GameParticle extends AngledParticle
 			Helper.rotate(rotation, 0, 0, 1);
 
 		//& Finally draw
-		Game.drawSpriteFromAtlas(indexX, indexY, Game.tileModel, shader, Tile.atlas.getAtlas());
+		drawSpriteFromAtlas(indexX, indexY, Game.tileModel);
 		
 		Helper.popLayer();
+	}
+	
+	private static void drawSpriteFromAtlas(float indexX, float indexY, Model model)
+	{
+		if (!Helper.isInitialised())
+			return;
+		
+		Matrix4f target = new Matrix4f();
+		
+		Camera camera = Game.camera;
+
+		camera.getProjection().mul(Helper.toMatrix(), target);
+		
+		Shader shader = Game.shader;
+
+		shader.setUniform2f("texture", indexX, indexY);
+		shader.setUniform4f("col", Helper.getRed(), Helper.getGreen(), Helper.getBlue(), Helper.getAlpha());
+
+		shader.setUniformMat4f("projection", target);
+
+		model.render();
 	}
 }
 

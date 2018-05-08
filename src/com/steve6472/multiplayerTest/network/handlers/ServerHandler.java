@@ -12,7 +12,9 @@ import java.net.DatagramPacket;
 import com.steve6472.multiplayerTest.PlayerMP;
 import com.steve6472.multiplayerTest.ServerGui;
 import com.steve6472.multiplayerTest.network.Server;
+import com.steve6472.multiplayerTest.network.packets.client.CChangeSlot;
 import com.steve6472.multiplayerTest.network.packets.client.CChat;
+import com.steve6472.multiplayerTest.network.packets.client.CConfirmChunk;
 import com.steve6472.multiplayerTest.network.packets.client.CMouseButton;
 import com.steve6472.multiplayerTest.network.packets.client.CMovePacket;
 import com.steve6472.multiplayerTest.network.packets.client.CPing;
@@ -21,12 +23,15 @@ import com.steve6472.multiplayerTest.network.packets.client.CRotate;
 import com.steve6472.multiplayerTest.network.packets.client.CSetName;
 import com.steve6472.multiplayerTest.network.packets.client.CUpdatePacket;
 import com.steve6472.multiplayerTest.network.packets.server.STeleportPlayer;
+import com.steve6472.multiplayerTest.server.tiles.ServerTile;
+import com.steve6472.multiplayerTest.network.packets.server.SChangeSlot;
 import com.steve6472.multiplayerTest.network.packets.server.SChat;
 import com.steve6472.multiplayerTest.network.packets.server.SPingResponse;
 import com.steve6472.multiplayerTest.network.packets.server.SRotate;
 import com.steve6472.multiplayerTest.network.packets.server.SSetName;
 import com.steve6472.multiplayerTest.network.packets.server.SSpawnBullet;
 import com.steve6472.sge.main.Util;
+import com.steve6472.sge.main.game.world.World;
 
 public class ServerHandler implements IServerHandler
 {
@@ -66,18 +71,48 @@ public class ServerHandler implements IServerHandler
 	@Override
 	public void handleMouseButtonPacket(CMouseButton packet)
 	{
-		if (packet.getAction() == 0 && packet.getButton() == 1)
+		{
+			PlayerMP player = server.getPlayer(packet.getSender());
+			{
+				if (player != null)
+				{
+					int tx = (packet.getX() - serverGui.getMainApp().getWidth() / 2 + player.getX()) / 32;
+					int ty = (packet.getY() - serverGui.getMainApp().getHeight() / 2 + player.getY()) / 32;
+
+					int id = serverGui.world0.getTileInWorldSafe(tx, ty, 0);
+					ServerTile.getTile(id).mouseEvent(tx, ty, player, packet.getAction(), packet.getButton(), serverGui.world0);
+				}
+			}
+		}
+
+		if (packet.getAction() == 0 && packet.getButton() == 1) //LMB
 		{
 			PlayerMP player = server.getPlayer(packet.getSender());
 			player.lastUpdate = System.currentTimeMillis();
-			int px = player.lastValidLocation.getIntX() + 16;
-			int py = player.lastValidLocation.getIntY() + 16;
-			SSpawnBullet bulletPacket = new SSpawnBullet(px, py,
-					Util.countAngle(packet.getX(), packet.getY(), serverGui.getMainApp().getWidth() / 2, serverGui.getMainApp().getHeight() / 2)
-							+ Util.getRandomDouble(2, -2),
-					Server.nextNetworkId++, player.getNetworkId());
-			server.bullets.add(bulletPacket.createBullet());
-			server.sendPacket(bulletPacket);
+			if (player.slot == 2)
+			{
+				int px = player.lastValidLocation.getIntX() + 16;
+				int py = player.lastValidLocation.getIntY() + 16;
+				SSpawnBullet bulletPacket = new SSpawnBullet(px, py,
+						Util.countAngle(packet.getX(), packet.getY(), serverGui.getMainApp().getWidth() / 2, serverGui.getMainApp().getHeight() / 2)
+								+ Util.getRandomDouble(2, -2),
+						Server.nextNetworkId++, player.getNetworkId());
+				server.bullets.add(bulletPacket.createBullet());
+				server.sendPacket(bulletPacket);
+			} else if (player.slot == 1)
+			{
+				int tx = (packet.getX() - serverGui.getMainApp().getWidth() / 2 + player.getX()) / 32;
+				int ty = (packet.getY() - serverGui.getMainApp().getHeight() / 2 + player.getY()) / 32;
+
+				if (Util.getDistance(tx, ty, player.getTileX(), player.getTileY()) <= 4)
+				{
+					int currentId = serverGui.world0.getTileInWorld(tx, ty, 0);
+					if (currentId == ServerTile.wallBlueprint.getId())
+					{
+						serverGui.world0.setTileInWorld(tx, ty, 0, ServerTile.grass.getId(), true);
+					}
+				}
+			}
 		} else if (packet.getAction() == 0 && packet.getButton() == 2) //RMB
 		{
 			PlayerMP player = server.getPlayer(packet.getSender());
@@ -85,6 +120,33 @@ public class ServerHandler implements IServerHandler
 			{
 				printCantFindPlayerErrorMessage(packet.getSender());
 				return;
+			} else
+			{
+				if (player.slot == 1)
+				{
+					int tx = (packet.getX() - serverGui.getMainApp().getWidth() / 2 + player.getX()) / 32;
+					int ty = (packet.getY() - serverGui.getMainApp().getHeight() / 2 + player.getY()) / 32;
+
+					if (Util.getDistance(tx, ty, player.getTileX(), player.getTileY()) <= 4)
+					{
+						int currentId = serverGui.world0.getTileInWorld(tx, ty, 0);
+
+						if (currentId == ServerTile.grass.getId() || currentId == ServerTile.grassWithFlowers0.getId() || currentId == ServerTile.destroyedWall.getId())
+						{
+							serverGui.world0.setTileInWorld(tx, ty, 0, ServerTile.wallBlueprint.getId(), true);
+						}
+//						else if (currentId == Tile.wallBlueprint.getId())
+//						{
+//							serverGui.world0.setTileInWorld(tx, ty, 0, Tile.wallProg0.getId(), true);
+//						} else if (Util.isNumberInRange(Tile.wallProg0.getId(), Tile.wallProg13.getId(), currentId))
+//						{
+//							serverGui.world0.setTileInWorld(tx, ty, 0, currentId + 1, true);
+//						} else if (currentId == Tile.wallProg14.getId())
+//						{
+//							serverGui.world0.setTileInWorld(tx, ty, 0, Tile.wall.getId(), true);
+//						}
+					}
+				}
 			}
 		}
 	}
@@ -151,6 +213,33 @@ public class ServerHandler implements IServerHandler
 		PlayerMP player = server.getPlayer(packet.getSender());
 		player.setAngle(packet.getDegree());
 		server.sendPacketWithException(new SRotate(player.getNetworkId(), packet.getDegree()), packet.getSender());
+	}
+	
+	@Override
+	public void handleChunkConfirm(CConfirmChunk packet)
+	{
+		PlayerMP player = server.getPlayer(packet.getSender());
+		if (player != null)
+		{
+			player.visitedChunks[packet.getChunkX() + packet.getChunkY() * World.worldWidth] = -1;
+		} else
+		{
+			printCantFindPlayerErrorMessage(packet.getSender());
+		}
+	}
+	
+	@Override
+	public void handleSlotChange(CChangeSlot packet)
+	{
+		PlayerMP player = server.getPlayer(packet.getSender());
+		if (player != null)
+		{
+			player.slot = packet.getSlot();
+			server.sendPacketWithException(new SChangeSlot(packet.getSlot(), player.getNetworkId()), packet.getSender());
+		} else
+		{
+			printCantFindPlayerErrorMessage(packet.getSender());
+		}
 	}
 	
 	private void printCantFindPlayerErrorMessage(DatagramPacket datagram)

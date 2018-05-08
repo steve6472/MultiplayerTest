@@ -7,14 +7,23 @@
 
 package com.steve6472.multiplayerTest;
 
+import com.steve6472.sge.gfx.Helper;
 import com.steve6472.sge.main.game.inventory.Item;
+import com.steve6472.sge.main.game.world.GameCamera;
 
 public class GameItem extends Item
 {
 	private static final long serialVersionUID = 2629263788180843428L;
 	
 	public static GameItem sword = new GameItem(0, 1, 0, 0, 0, 0, ItemType.SWORD);
+	public static GameItem thinSword = new GameItem(11, 1, 0, 0, 0, 0, ItemType.SWORD);
 	public static GameItem dagger = new GameItem(0, 2, 0, 0, 0, 0, ItemType.DAGGER);
+
+	public static GameItem changingSword = new GameItem(8, 0, 0, 0, 0, 0, ItemType.SWORD);
+	public static GameItem changingSwordInv = new GameItem(5, 0, 0, 0, 0, 0, ItemType.SWORD);
+	
+	public static GameItem zappDagger = new GameItem(6, 2, 0, 0, 0, 0, ItemType.DAGGER);
+	public static GameItem wallBlueprint = new GameItem(11, 2, 0, 0, 0, 0, ItemType.TILE);
 	
 	private int indexX;
 	private int indexY;
@@ -62,10 +71,26 @@ public class GameItem extends Item
 			Helper.rotate(rot, 0, 0, 1);
 		
 		Helper.scale(16 + scale);
-		Game.drawSpriteFromAtlas((float) item.indexX / 16f, (float) item.indexY / 16f, Game.pixelModel32, Game.shader, Game.sprites);
+		Game.drawSpriteFromAtlas((float) item.getIndexX() / 16f, (float) item.getIndexY() / 16f, Game.pixelModel32, Game.shader, Game.sprites);
 		
 		Helper.popLayer();
 	}
+	
+	/*
+	 * Multi layerd model
+	 * 
+	 * //Handle 
+	 * Helper.color(0.5f, 0.25f, 0.125f, 0.0f);
+	 * Game.drawSpriteFromAtlas(9f / 16f, 2f / 16f, model, shader, sprite);
+	 * 
+	 * //Blade 
+	 * Helper.color(0.0f, 0.0f, 1.0f, 0.0f);
+	 * Game.drawSpriteFromAtlas(10f / 16f, 2f / 16f, model, shader, sprite);
+	 * 
+	 * //Outline 
+	 * Helper.color(0.0f, 0.0f, 0.0f, 0.0f);
+	 * Game.drawSpriteFromAtlas(8f / 16f, 1f / 16f, model, shader, sprite);
+	 */
 	
 	public int getIndexX()
 	{

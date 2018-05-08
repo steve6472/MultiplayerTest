@@ -10,6 +10,7 @@ package com.steve6472.multiplayerTest;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 
+import com.steve6472.multiplayerTest.server.tiles.ServerTile;
 import com.steve6472.sge.gfx.Screen;
 import com.steve6472.sge.gui.Gui;
 import com.steve6472.sge.gui.GuiUtils;
@@ -18,6 +19,9 @@ import com.steve6472.sge.gui.components.Button;
 import com.steve6472.sge.gui.components.ButtonEvents;
 import com.steve6472.sge.gui.components.TextField;
 import com.steve6472.sge.main.MainApplication;
+import com.steve6472.sge.main.game.world.Chunk;
+
+import com.steve6472.sge.main.game.world.World;
 
 public class MenuGui extends Gui
 {
@@ -71,6 +75,10 @@ public class MenuGui extends Gui
 			@Override
 			public void click()
 			{
+				ServerTile.initTiles();
+//				GameTile.initGameTiles(Tile.atlas, 32, 32, new Shader("shaders\\basev2"), 31, 17);
+				Chunk.initChunks(8, 8, 1);
+				World.initWorlds(64, 64);
 				((Game) getMainApp()).serverGui.showGui();
 				hideGui();
 				getMainApp().resetOrtho();
@@ -86,6 +94,9 @@ public class MenuGui extends Gui
 			@Override
 			public void click()
 			{
+//				GameTile.initGameTiles(Tile.atlas, 32, 32, new Shader("shaders\\basev2"), 31, 17);
+//				Chunk.initChunks(16, 16, 1);
+//				World.initWorlds(2, 2);
 				ClientGui.name = name.getText();
 				((Game) getMainApp()).clientGui.showGui();
 				hideGui();
@@ -93,6 +104,22 @@ public class MenuGui extends Gui
 			}
 		});
 		addComponent(runClient);
+		
+		Button runRenderTest = new Button("Render Test");
+		runRenderTest.setLocation(124 + 110, 35);
+		runRenderTest.setSize(100, 30);
+		runRenderTest.addEvent(new ButtonEvents()
+		{
+			@Override
+			public void click()
+			{
+				((Game) getMainApp()).renderTestGui.showGui();
+				hideGui();
+//				getMainApp().perspectiveGL(85f, (float) getMainApp().getCurrentWidth() / (float) getMainApp().getCurrentHeight(), 0.1f, 1000f);
+				getMainApp().resetOrtho();
+			}
+		});
+		addComponent(runRenderTest);
 	}
 
 	@Override

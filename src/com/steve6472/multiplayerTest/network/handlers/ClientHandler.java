@@ -7,23 +7,36 @@
 
 package com.steve6472.multiplayerTest.network.handlers;
 
-import java.util.Iterator;
+import static org.lwjgl.opengl.GL11.GL_NEAREST;
+import static org.lwjgl.opengl.GL11.GL_RGBA;
+import static org.lwjgl.opengl.GL11.GL_TEXTURE_2D;
+import static org.lwjgl.opengl.GL11.GL_TEXTURE_MAG_FILTER;
+import static org.lwjgl.opengl.GL11.GL_TEXTURE_MIN_FILTER;
+import static org.lwjgl.opengl.GL11.GL_UNSIGNED_BYTE;
+import static org.lwjgl.opengl.GL11.glBindTexture;
+import static org.lwjgl.opengl.GL11.glDisable;
+import static org.lwjgl.opengl.GL11.glTexImage2D;
+import static org.lwjgl.opengl.GL11.glTexParameterf;
+
 import java.util.List;
 
 import com.steve6472.multiplayerTest.ClientGui;
 import com.steve6472.multiplayerTest.Event;
-import com.steve6472.multiplayerTest.GameParticle;
 import com.steve6472.multiplayerTest.Game;
+import com.steve6472.multiplayerTest.GameParticle;
 import com.steve6472.multiplayerTest.PlayerMP;
-import com.steve6472.multiplayerTest.World;
 import com.steve6472.multiplayerTest.network.Client;
+import com.steve6472.multiplayerTest.network.packets.client.CConfirmChunk;
+import com.steve6472.multiplayerTest.network.packets.server.SAddAnimation;
 import com.steve6472.multiplayerTest.network.packets.server.SAddEvent;
+import com.steve6472.multiplayerTest.network.packets.server.SChangeSlot;
 import com.steve6472.multiplayerTest.network.packets.server.SChat;
 import com.steve6472.multiplayerTest.network.packets.server.SConnectPlayer;
 import com.steve6472.multiplayerTest.network.packets.server.SDeleteBullet;
 import com.steve6472.multiplayerTest.network.packets.server.SDisconnectPlayer;
 import com.steve6472.multiplayerTest.network.packets.server.SPingResponse;
 import com.steve6472.multiplayerTest.network.packets.server.SRotate;
+import com.steve6472.multiplayerTest.network.packets.server.SRunAnimation;
 import com.steve6472.multiplayerTest.network.packets.server.SRunEvent;
 import com.steve6472.multiplayerTest.network.packets.server.SSetName;
 import com.steve6472.multiplayerTest.network.packets.server.SSetNetworkId;
@@ -31,12 +44,19 @@ import com.steve6472.multiplayerTest.network.packets.server.SSetScore;
 import com.steve6472.multiplayerTest.network.packets.server.SSpawnBullet;
 import com.steve6472.multiplayerTest.network.packets.server.SSpawnParticle;
 import com.steve6472.multiplayerTest.network.packets.server.STeleportPlayer;
-import com.steve6472.multiplayerTest.network.packets.server.world.SAddWorld;
 import com.steve6472.multiplayerTest.network.packets.server.world.SChangeTile;
-import com.steve6472.multiplayerTest.network.packets.server.world.SDeleteWorld;
-import com.steve6472.multiplayerTest.network.packets.server.world.SReplaceWorld;
-import com.steve6472.multiplayerTest.network.packets.server.world.SSetWorld;
+import com.steve6472.multiplayerTest.network.packets.server.world.SInitClientData;
+import com.steve6472.multiplayerTest.network.packets.server.world.SSetChunk;
+import com.steve6472.multiplayerTest.server.tiles.ServerTile;
+import com.steve6472.sge.gfx.Model;
+import com.steve6472.sge.gfx.Shader;
+import com.steve6472.sge.gfx.Sprite;
 import com.steve6472.sge.main.Util;
+import com.steve6472.sge.main.game.Atlas;
+import com.steve6472.sge.main.game.world.Chunk;
+import com.steve6472.sge.main.game.world.GameTile;
+import com.steve6472.sge.main.game.world.World;
+import com.steve6472.sge.test.ShaderTest2;
 
 public class ClientHandler implements IClientHandler
 {
@@ -56,7 +76,7 @@ public class ClientHandler implements IClientHandler
 	{
 		if (packet.getNetworkId() == client.networkId)
 		{
-			clientGui.loc.setLocation(packet.getX(), packet.getY());
+			clientGui.getClientController().setLocation(packet.getX(), packet.getY());
 			return;
 		}
 		PlayerMP player = client.getPlayer(packet.getNetworkId());
@@ -112,7 +132,6 @@ public class ClientHandler implements IClientHandler
 	public void handleSpawnParticlePacket(SSpawnParticle packet)
 	{
 		//Util.getRandomInt(3, 1, Util.getRandomLong(i, Long.MIN_VALUE, packet.getSeed()))
-		World world = clientGui.getWorld(packet.getWorldId());
 		
 		for (int i = 0; i < packet.getCount(); i++)
 		{
@@ -128,7 +147,7 @@ public class ClientHandler implements IClientHandler
 					packet.getSeed());
 			particle.rotation = (float) ang + Util.getRandomFloat(30, -30);
 			particle.bigData.setDouble(0, Util.getRandomDouble(1.48d + 0.5d, 1.48d - 0.5d));
-			world.particles.add(particle);
+			clientGui.world.particles.add(particle);
 		}
 	}
 	
@@ -187,8 +206,8 @@ public class ClientHandler implements IClientHandler
 			}
 		}
 		
-		if (clientGui.chatText.size() > 8)
-			clientGui.chatText.remove(8);
+		if (clientGui.getClientController().getChatText().size() > 8)
+			clientGui.getClientController().clearLastMessage();
 	}
 	
 	/*
@@ -198,53 +217,7 @@ public class ClientHandler implements IClientHandler
 	@Override
 	public void handleChangeTile(SChangeTile packet)
 	{
-		World world = clientGui.getWorld(packet.getWorldId());
-		world.setTile(packet.getId(), packet.getIndex(), false);
-	}
-
-	@Override
-	public void handleSetWorld(SSetWorld packet)
-	{
-		clientGui.world = clientGui.getWorld(packet.getWorldId());
-	}
-	
-	@Override
-	public void handleAddWorld(SAddWorld packet)
-	{
-		World world = new World(packet.getTilesX(), packet.getTilesY(), packet.getWorldId(), null, Game.camera, clientGui.getMainApp());
-		world.setTiles(packet.getTiles());
-		clientGui.worlds.add(world);
-	}
-	
-	@Override
-	public void handleDeleteWorld(SDeleteWorld packet)
-	{
-		for (Iterator<World> iter = clientGui.worlds.iterator(); iter.hasNext();)
-		{
-			World w = iter.next();
-			if (w.getWorldId() == packet.getWorldId())
-			{
-				iter.remove();
-				break;
-			}
-		}
-	}
-	
-	@Override
-	public void handleReplaceWorld(SReplaceWorld packet)
-	{
-		int i = 0;
-		for (int index = 0; index < clientGui.worlds.size(); index++)
-		{
-			if (clientGui.worlds.get(index).getWorldId() == packet.getReplaceId())
-			{
-				i = index;
-				break;
-			}
-		}
-		World world = new World(packet.getTilesX(), packet.getTilesY(), packet.getWorldId(), null, Game.camera, clientGui.getMainApp());
-		world.setTiles(packet.getTiles());
-		clientGui.worlds.set(i, world);
+		clientGui.world.setTileInWorld(packet.getIndex(), 0, packet.getId(), false);
 	}
 	
 	@Override
@@ -269,8 +242,8 @@ public class ClientHandler implements IClientHandler
 	
 	private void addMessage(String text)
 	{
-		clientGui.chatText.add(text);
-		shiftRight(clientGui.chatText);
+		clientGui.getClientController().addChatMessage(text);
+		shiftRight(clientGui.getClientController().getChatText());
 	}
 	
 	public void shiftRight(List<String> list) 
@@ -293,7 +266,73 @@ public class ClientHandler implements IClientHandler
 	@Override
 	public void handlePingResponse(SPingResponse packet)
 	{
-		clientGui.ping = System.currentTimeMillis() - clientGui.pingStart;
+		clientGui.getClientController().setPing(System.currentTimeMillis() - clientGui.getClientController().pingStart);
 	}
+
+	@Override
+	public void handleSetChunk(SSetChunk packet)
+	{
+//		System.out.println("Setting chunk " + packet.getChunkX() + "/" + packet.getChunkY());
+		if (packet.getTiles() == null)
+		{
+			clientGui.world.setChunk(packet.getChunkX(), packet.getChunkY(), null);
+			
+//			client.sendPacket(new CConfirmChunk(packet.getChunkX(), packet.getChunkY()));
+		} else
+		{
+			Chunk c = new Chunk();
+			c.setTiles(packet.getTiles(), 0);
+			clientGui.world.setChunk(packet.getChunkX(), packet.getChunkY(), c);
+
+			client.sendPacket(new CConfirmChunk(packet.getChunkX(), packet.getChunkY()));
+		}
+	}
+	
+	@Override
+	public void handleClientDataInit(SInitClientData packet)
+	{
+		ClientGui.data = packet;
+		ClientGui.update = true;
+	}
+	
+	@Override
+	public void handleAddAnimation(SAddAnimation packet)
+	{
+		clientGui.addAnimation(packet.getAnimation().getId(), packet.getAnimation());
+	}
+	
+	@Override
+	public void handleRunAnimation(SRunAnimation packet)
+	{
+		clientGui.runningAnimations.addObject(clientGui.animations.get(packet.getAnimationId()).clone());
+	}
+	
+	@Override
+	public void handleSlotChange(SChangeSlot packet)
+	{
+		if (client.networkId == packet.getNetworkId())
+		{
+			clientGui.getClientController().setSlot(packet.getSlot());;
+		} else
+		{
+			 PlayerMP player = client.getPlayer(packet.getNetworkId());
+			 if (player != null)
+				 player.slot = packet.getSlot();
+		}
+	}
+	
+//	@Override
+//	public void handleChunkMove(SMoveChunk packet)
+//	{
+//		if (packet.isMove())
+//		{
+//			Chunk temp = clientGui.world.getChunk(packet.getChunkX(), packet.getChunkY());
+//			clientGui.world.setChunk(packet.getChunkX(), packet.getChunkY(), clientGui.world.getChunk(packet.getMoveX(), packet.getMoveY()));
+//			clientGui.world.setChunk(packet.getMoveX(), packet.getMoveY(), temp);
+//		} else
+//		{
+//			clientGui.world.setChunk(packet.getMoveX(), packet.getMoveY(), clientGui.world.getChunk(packet.getChunkX(), packet.getChunkY()));
+//		}
+//	}
 
 }

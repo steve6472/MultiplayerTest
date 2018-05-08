@@ -7,7 +7,9 @@
 
 package com.steve6472.multiplayerTest.network.handlers;
 
+import com.steve6472.multiplayerTest.network.packets.client.CChangeSlot;
 import com.steve6472.multiplayerTest.network.packets.client.CChat;
+import com.steve6472.multiplayerTest.network.packets.client.CConfirmChunk;
 import com.steve6472.multiplayerTest.network.packets.client.CMouseButton;
 import com.steve6472.multiplayerTest.network.packets.client.CMovePacket;
 import com.steve6472.multiplayerTest.network.packets.client.CPing;
@@ -34,4 +36,8 @@ public interface IServerHandler extends IPacketHandler
 	public void handlePing(CPing packet);
 	
 	public void handleRotation(CRotate packet);
+	
+	public void handleChunkConfirm(CConfirmChunk packet);
+	
+	public void handleSlotChange(CChangeSlot packet);
 }

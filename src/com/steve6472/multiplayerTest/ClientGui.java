@@ -7,57 +7,57 @@
 
 package com.steve6472.multiplayerTest;
 
-import static org.lwjgl.glfw.GLFW.*;
-//import static org.lwjgl.opengl.GL11.*;
+//import static org.lwjgl.glfw.GLFW.*;
+import static org.lwjgl.opengl.GL11.*;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.steve6472.multiplayerTest.animations.Animation;
-import com.steve6472.multiplayerTest.animations.SwingAnimation;
-import com.steve6472.multiplayerTest.animations.SwingAnimationV2;
+
+import com.steve6472.multiplayerTest.animations.SwingAnimationV3;
 import com.steve6472.multiplayerTest.network.Client;
-import com.steve6472.multiplayerTest.network.packets.client.CChat;
-import com.steve6472.multiplayerTest.network.packets.client.CMouseButton;
-import com.steve6472.multiplayerTest.network.packets.client.CMovePacket;
-import com.steve6472.multiplayerTest.network.packets.client.CPing;
-import com.steve6472.multiplayerTest.network.packets.client.CRotate;
 import com.steve6472.multiplayerTest.network.packets.client.CSetName;
-import com.steve6472.multiplayerTest.network.packets.client.CUpdatePacket;
+import com.steve6472.multiplayerTest.network.packets.server.world.SInitClientData;
+import com.steve6472.sge.gfx.Helper;
 import com.steve6472.sge.gfx.Screen;
+import com.steve6472.sge.gfx.Shader;
+import com.steve6472.sge.gfx.SmallNineSlice;
 import com.steve6472.sge.gfx.Sprite;
+import com.steve6472.sge.gfx.animations.Animation;
+import com.steve6472.sge.gfx.animations.IAnimationTick;
 import com.steve6472.sge.gui.Gui;
 import com.steve6472.sge.main.MainApplication;
 import com.steve6472.sge.main.SGArray;
 import com.steve6472.sge.main.Util;
-import com.steve6472.sge.main.callbacks.CharCallback;
-import com.steve6472.sge.main.callbacks.MouseButtonCallback;
+import com.steve6472.sge.main.game.Atlas;
 import com.steve6472.sge.main.game.IObjectManipulator;
-import com.steve6472.sge.main.game.Vec2;
-import com.steve6472.sge.main.game.inventory.Inventory;
-import com.steve6472.sge.main.game.inventory.ItemSlot;
+import com.steve6472.sge.main.game.world.Chunk;
+import com.steve6472.sge.main.game.world.GameCamera;
+import com.steve6472.sge.main.game.world.GameTile;
+import com.steve6472.sge.main.game.world.World;
 import com.steve6472.sge.main.networking.packet.ConnectPacket;
+import com.steve6472.sge.test.ShaderTest2;
+import com.steve6472.sge.gfx.Model;
 
 public class ClientGui extends Gui
 {
 	private static final long serialVersionUID = -8970752667717685758L;
 	
 	Client client;
-	public Vec2 loc, oldLoc;
-	public List<String> chatText;
 	public List<PlayerMP> players;
 	public IObjectManipulator<Bullet> bullets;
-	public World world;
+	public GameWorld world;
 	public int score;
-	private boolean openedChat = false;
-	private String chatFieldText = "";
-	private long lastUpdate = 0;
-	public List<World> worlds;
 	public Map<Integer, Event> events;
-	public Inventory inventory;
-	public SGArray<Animation> animations;
+	public Map<Integer, Animation> animations;
+	public SGArray<Animation> runningAnimations;
+	
+	ClientController clientController;
+	
+	SmallNineSlice hotbar;
 	
 	public void addEvent(int id, Event event)
 	{
@@ -68,6 +68,16 @@ public class ClientGui extends Gui
 		events.put(id, event);
 	}
 	
+	public void addAnimation(int id, Animation animation)
+	{
+		if (events.containsKey(id))
+		{
+			throw new IllegalArgumentException("Duplicate animation id:" + id);
+		}
+		animations.put(id, animation);
+	}
+	
+	
 	public static String name = "";
 
 	public ClientGui(MainApplication mainApp)
@@ -75,209 +85,142 @@ public class ClientGui extends Gui
 		super(mainApp);
 		switchRender();
 		
-		lastUpdate = System.currentTimeMillis();
 		events = new HashMap<Integer, Event>();
-		worlds = new ArrayList<World>();
-		inventory = new Inventory(null, ItemSlot.class, 5);
-		animations = new SGArray<Animation>(0, true, true);
-
-		mainApp.getKeyHandler().addKeyCallback((key, scancode, action, mod) ->
-		{
-			if (key == GLFW_KEY_ENTER && action == GLFW_PRESS)
-			{
-				if (!openedChat)
-				{
-					openedChat = true;
-				} else
-				{
-					if (!chatFieldText.isEmpty())
-					{
-						client.sendPacket(new CChat(chatFieldText));
-					}
-					chatFieldText = "";
-					openedChat = false;
-				}
-			}
-			
-			if (!openedChat && action == GLFW_PRESS && key == GLFW_KEY_F)
-			{
-				animations.addObject(new SwingAnimation());
-			}
-			
-			if (!openedChat && action == GLFW_PRESS && key == GLFW_KEY_G)
-			{
-				animations.addObject(new SwingAnimationV2());
-			}
-			
-			if (openedChat && key == GLFW_KEY_BACKSPACE && (action == GLFW_PRESS || action == GLFW_REPEAT) && chatFieldText.length() >= 1)
-			{
-				chatFieldText = chatFieldText.substring(0, chatFieldText.length() - 1);
-			}
-		});
-
-		mainApp.getKeyHandler().addCharCallback(new CharCallback()
-		{
-			@Override
-			public void invoke(int codePoint)
-			{
-				if (openedChat)
-					if (chatFieldText.length() < 63)
-						chatFieldText += Character.toChars(codePoint)[0];
-			}
-		});
+		runningAnimations = new SGArray<Animation>(0, true, true);
 		
-		this.world = generateWorld(0);
+		hotbar = new SmallNineSlice(97, 97, 30, 30, Game.sprites, new Shader("shaders\\basev2"), Game.camera);
+		hotbar.setCorner(0, 0, 7, 7);
+		hotbar.setTopEdge(7, 0, 16, 7, 0f);
+		hotbar.setSideEdge(0, 7, 7, 16, 0f);
+		hotbar.createMiddle();
+		hotbar.setScale(32 * 4 / 2, 0, 1f / 8f);
+		hotbar.setScaleMultiplier(2f, 2f);
 	}
 	
-	public World generateWorld(int worldId)
+	public GameWorld generateWorld(int worldId)
 	{
-//		World world = new World(32 * 8, 18 * 8, worldId, server, MultiplayerTest.camera, getMainApp());
-		World world = new World(32, 18, worldId, null, Game.camera, getMainApp());
-		
-		for (int i = 0; i < world.getTilesX(); i++)
-		{
-			for (int j = 0; j < world.getTilesY(); j++)
-			{
-				world.setTile(Tile.grass.getId(), i, j, false);
-			}
-		}
-
-		return world;
+		return new GameWorld(worldId, null, getMainApp());
 	}
 
 	@Override
 	public void showEvent()
 	{
 		players = new ArrayList<PlayerMP>();
-		chatText = new ArrayList<String>();
 		bullets = new IObjectManipulator<Bullet>();
-		
-//		loc = new Vec2(mainApp.getCenter().add(new Vec2(-16, -16)));
-		loc = new Vec2(200, 200);
-		oldLoc = loc.clone();
 		
 		client = new Client(MenuGui.ip.getText(), Integer.parseInt(MenuGui.port.getText()), this);
 		client.start();
 		client.sendPacket(new ConnectPacket());
 		client.sendPacket(new CSetName(name));
-		lastUpdate = System.currentTimeMillis();
 		
-		getMainApp().getMouseHandler().addMouseButtonCallback(new MouseButtonCallback()
-		{
-			@Override
-			public void invoke(int x, int y, int button, int action, int mods)
-			{
-				if (action == GLFW_PRESS)
-				{
-					client.sendPacket(new CMouseButton(x, y, getMainApp().getMouseHandler().getButton(), 0));
-				} else if (action == GLFW_RELEASE)
-				{
-					client.sendPacket(new CMouseButton(x, y, getMainApp().getMouseHandler().getButton(), 1));
-				}
-			}
-		});
+		clientController = new ClientController(getMainApp(), client, this);
 	}
 
 	@Override
 	public void createGui()
 	{
 	}
-	
-	int delay = 0;
-	
-	public long pingStart;
-	public long ping;
-	double lastRotation = 0;
 
 	@Override
 	public void guiTick()
 	{
-		if (System.currentTimeMillis() - lastUpdate >= 9 * 1000)
-		{
-			client.sendPacket(new CUpdatePacket());
-			client.sendPacket(new CPing());
-			pingStart = System.currentTimeMillis();
-			lastUpdate = System.currentTimeMillis();
-		}
+		if (world != null)
+			world.tick();
 		
-		double newRotation = Util.countAngle(getMainApp().getCurrentWidth() / 2, getMainApp().getCurrentHeight() / 2, getMainApp().getMouseX(), getMainApp().getMouseY());
+		double newRotation = Util.countAngle(mainApp.getCurrentWidth() / 2, mainApp.getCurrentHeight() / 2, mainApp.getMouseX(), mainApp.getMouseY());
 		
-		if (newRotation != lastRotation && delay == 1)
-		{
-			lastRotation = newRotation;
-			client.sendPacket(new CRotate(newRotation));
-		}
-		
-		if (!openedChat)
-		{
-			double speed = 1;
-			
-			if (getMainApp().isKeyPressed(GLFW_KEY_LEFT_SHIFT))
-				speed = 4;
-			if (getMainApp().isKeyPressed(GLFW_KEY_LEFT_CONTROL))
-				speed = 16;
-			
-			if (getMainApp().getKeyHandler().isKeyPressed(GLFW_KEY_W))
-				loc.move2(newRotation, speed);
-
-			if (getMainApp().getKeyHandler().isKeyPressed(GLFW_KEY_S))
-				loc.move2(newRotation + 180, speed);
-
-			delay++;
-			if (delay >= 2)
-			{
-				if (!loc.equals(oldLoc))
-				{
-					client.sendPacket(new CMovePacket(loc.getIntX(), loc.getIntY()));
-					oldLoc = loc.clone();
-				}
-				delay = 0;
-			}
-
-			if (world != null)
-			{
-				Game.camera.setLocation(loc.getIntX() - getMainApp().getCurrentWidth() / 2 + 16, loc.getIntY() - getMainApp().getCurrentHeight() / 2 + 16);
-			}
-		}
+		clientController.tick(getMainApp(), newRotation);
 		
 		SGArray<Integer> removeAnimations = new SGArray<Integer>(0, true, true);
 		
-		for (int i = 0; i < animations.getSize(); i++)
+		for (int i = 0; i < runningAnimations.getSize(); i++)
 		{
-			Animation a = animations.getObject(i);
+			Animation a = runningAnimations.getObject(i);
 			if (a.hasEnded())
 			{
+				if (a instanceof SwingAnimationV3)
+					clientController.swing = false;
 				removeAnimations.addObject(i);
 				continue;
 			}
 			a.tick();
+			if (a instanceof IAnimationTick)
+			{
+				((IAnimationTick) a).tick((float) newRotation, 0f, 0f);
+			}
 		}
 		
 		for (int i : removeAnimations)
 		{
-			animations.remove(i);
-//			animations.addObject(new SwingAnimationV2());
+			runningAnimations.remove(i);
 		}
-//		animations.addObject(new SwingAnimationV2());
-		
-		if (world != null)
-			world.tick();
 		
 		bullets.tick(true);
+	}
+	
+	public static boolean update = false;
+	public static SInitClientData data;
+	public static Atlas atlas;
+	
+	private void update()
+	{
+		Game.tileSprite.setPixels(data.tileTextures);
+		
+		Game.tileSprite.setSize(data.atlasSize * 32, data.atlasSize * 32);
+		
+		int[] newPixels = new int[data.tileTextures.length];
+		
+		for (int i = 0; i < newPixels.length; i++)
+		{
+			int oldPixel = data.tileTextures[i];
+			int r = Screen.getRed(oldPixel);
+			int g = Screen.getGreen(oldPixel);
+			int b = Screen.getBlue(oldPixel);
+			int a = Screen.getAlpha(oldPixel);
+			int newPixel = Screen.getColor(b, g, r, a);
+			newPixels[i] = newPixel;
+		}
+		
+		glBindTexture(GL_TEXTURE_2D, Game.tileSprite.getId());
+
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, data.atlasSize * 32, data.atlasSize * 32, 0, GL_RGBA, GL_UNSIGNED_BYTE, newPixels);
+		
+		glDisable(GL_TEXTURE_2D);
+
+		Game.tileSprite.save(new File("atlas.png"));
+		
+		atlas = new Atlas(Game.tileSprite, data.atlasSize);
+		Game.tileModel = new Model(ShaderTest2.fillScreen(), ShaderTest2.createTexture(32, 32, atlas.getAtlas()), ShaderTest2.createArray(0));
+		GameTile.initGameTiles(atlas, 32, 32, new Shader("shaders\\basev2"), 31, 17);
+		Chunk.initChunks(data.chunkWidth, data.chunkHeight, data.chunkLayers);
+		World.initWorlds(data.worldWidth, data.worldHeight);
+		
+		world = generateWorld(0);
+	}
+	
+	public static Atlas getAtlas()
+	{
+		return atlas;
 	}
 	
 	@Override
 	public void render(Screen screen)
 	{
-//		if (world != null)
-//			world.render(screen);
+		if (update)
+		{
+			update();
+			update = false;
+		}
+		
+		if (world != null)
+			world.render(Game.camera);
 		
 		for (PlayerMP p : players)
 		{
 			int px = p.getLocation().getIntX();
 			int py = p.getLocation().getIntY();
-			int x = px - loc.getIntX() + getMainApp().getCurrentWidth() / 2 - 16;
-			int y = py - loc.getIntY() + getMainApp().getCurrentHeight() / 2 - 16;
+			int x = px - getX() + getMainApp().getCurrentWidth() / 2 - 16;
+			int y = py - getY() + getMainApp().getCurrentHeight() / 2 - 16;
 			String score = "Score:" + p.score;
 			String id = "#" + p.getNetworkId();
 			String name = p.getPlayerName();
@@ -297,46 +240,114 @@ public class ClientGui extends Gui
 			Game.drawFont(mainApp, id, x + 16 - id.length() * 4, y);
 			Game.drawFont(mainApp, score, x + 16 - score.length() * 4, y + 8);
 		}
-
+		
+		GameItem renderedItem = null;
+		
+		if (clientController.getSlot() == 0)
+			renderedItem = GameItem.thinSword;
+		if (clientController.getSlot() == 1)
+			renderedItem = GameItem.wallBlueprint;
+		if (clientController.getSlot() == 2)
+			renderedItem = GameItem.zappDagger;
+		if (clientController.getSlot() == 3 || clientController.getSlot() == 4)
+			renderedItem = GameItem.changingSword;
+		
+		
 		/* Render Player */
 		if (world != null)
 		{
 			Helper.pushLayer();
 			
+			float ang = (float) Util.countAngle(getMainApp().getCurrentWidth() / 2, getMainApp().getCurrentHeight() / 2, getMainApp().getMouseX(), getMainApp().getMouseY());
+			
 			Helper.scale(16);
-			Helper.rotate((float) Util.countAngle(getMainApp().getCurrentWidth() / 2, getMainApp().getCurrentHeight() / 2, getMainApp().getMouseX(), getMainApp().getMouseY()), 0, 0, 1);
+			Helper.rotate(ang, 0, 0, 1);
 			Helper.color(0, 0, 1, 0);
 			Game.drawSpriteFromAtlas(4f / 16f, 0, Game.pixelModel32, Game.shader, Game.sprites);
 			
 			Helper.popLayer();
+
+			if (!clientController.swing)
+			{
+				Helper.pushLayer();
+				
+
+				float rt = 30f / 32f;
+				Helper.translate(-rt, -rt, 0);
+				
+				if (clientController.getSlot() == 1)
+					Helper.rotate(-45, 0, 0, 1);
+				
+				Helper.rotate(ang + 45, 0, 0, 1);
+				Helper.translate(rt, rt, 0);
+				
+				if (clientController.getSlot() == 1)
+					Helper.translate(-10, -16, 0);
+				
+				Helper.translate(10, 32, 0);
+				Helper.scale(16);
+
+				Game.drawSpriteFromAtlas((float) renderedItem.getIndexX() / 16f, (float) renderedItem.getIndexY() / 16f, Game.pixelModel32,
+						Game.shader, Game.sprites);
+
+				Helper.popLayer();
+			}
 		}
 		
-		for (Animation a : animations)
+		for (Animation a : runningAnimations)
 		{
 			a.render();
 		}
 
+		hotbar.render(0, getMainApp().getCurrentHeight() / -2f + 32f);
+		
+		Helper.pushLayer();
+		
+		Helper.scale(32);
+		Helper.translate((clientController.getSlot() - 2) * -2, 4 * -2, 0);
+		Game.drawSpriteFromAtlas(4f / 16f, 3f / 16f, Game.pixelModel32, Game.shader, Game.sprites);
+		
+		Helper.popLayer();
+		
+		Helper.pushLayer();
+		
+		Helper.scale(16);
+		Helper.translate(-4 * -2, 8 * -2, 0);
+		Game.drawSpriteFromAtlas(11f / 16f, 1f / 16f, Game.pixelModel32, Game.shader, Game.sprites);
+		Helper.translate(-4, 0, 0);
+		Game.drawSpriteFromAtlas(11f / 16f, 2f / 16f, Game.pixelModel32, Game.shader, Game.sprites);
+		Helper.translate(-4, 0, 0);
+		Game.drawSpriteFromAtlas(6f / 16f, 2f / 16f, Game.pixelModel32, Game.shader, Game.sprites);
+		
+		Helper.popLayer();
+		
 		bullets.render(screen);
 		//Render Particles
 
 		Game.drawFont(mainApp, "UPS:" + mainApp.getFPS(), 5, 5);
 		Game.drawFont(mainApp, "Score: " + score, 5, 15);
-		Game.drawFont(mainApp, "Ping: " + ping, 5, 25);
+		Game.drawFont(mainApp, "Ping: " + clientController.getPing(), 5, 25);
+		if (world != null)
+		{
+			Game.drawFont(mainApp, "Rendered Tiles: " + world.renderedTiles, 5, 35);
+			Game.drawFont(mainApp, "Particles: " + world.particles.getAll().size(), 5, 45);
+		}
+		Game.drawFont(mainApp, "X/Y: " + getX() + "/" + getY(), 5, 55);
 		
 		int baseY = getMainApp().getCurrentHeight() - 27;
 		
-		for (int i = 0; i < chatText.size(); i++)
+		for (int i = 0; i < clientController.getChatText().size(); i++)
 		{
-			Game.drawFont(mainApp, chatText.get(i), 5, baseY - 10 * i);
+			Game.drawFont(mainApp, clientController.getChatText().get(i), 5, baseY - 10 * i);
 		}
 		
-		if (openedChat)
+		if (clientController.isOpenedChat())
 		{
 			Game.drawSquare(0, mainApp.getCurrentHeight() - 10, 8 * 64 + 4, 10, 0x80000000);
-			Game.drawFont(mainApp, chatFieldText, 2, getMainApp().getCurrentHeight() - 9);
+			Game.drawFont(mainApp, clientController.getChatFieldText(), 2, getMainApp().getCurrentHeight() - 9);
 		}
 		
-		GameItem.renderItemInWorld(0, 0, 0, 45, GameItem.sword);
+//		GameItem.renderItemInWorld(0, 0, 64, 0, GameItem.sword);
 		
 //		GameCamera camera = MultiplayerTest.camera;
 //
@@ -371,18 +382,25 @@ public class ClientGui extends Gui
 		Helper.popLayer();
 	}
 	
-	float size = 0;
-	
-	public World getWorld(int worldId)
+	public GameWorld getWorld()
 	{
-		for (int index = 0; index < worlds.size(); index++)
-		{
-			if (worlds.get(index).getWorldId() == worldId)
-			{
-				return worlds.get(index);
-			}
-		}
-		return null;
+		return world;
 	}
-
+	
+	public int getX()
+	{
+		return clientController.loc.getIntX();
+	}
+	
+	public int getY()
+	{
+		return clientController.loc.getIntY();
+	}
+	
+	public ClientController getClientController()
+	{
+		return clientController;
+	}
+	
+	float size = 0;
 }

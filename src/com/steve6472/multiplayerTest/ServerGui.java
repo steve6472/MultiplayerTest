@@ -7,7 +7,10 @@
 
 package com.steve6472.multiplayerTest;
 
+import static org.lwjgl.opengl.GL11.*;
+
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import org.joml.Matrix4f;
@@ -15,19 +18,21 @@ import org.lwjgl.glfw.GLFW;
 
 import com.steve6472.multiplayerTest.network.Server;
 import com.steve6472.multiplayerTest.network.packets.server.SRunEvent;
-import com.steve6472.multiplayerTest.network.packets.server.world.SReplaceWorld;
-import com.steve6472.multiplayerTest.network.packets.server.world.SSetWorld;
+import com.steve6472.multiplayerTest.server.tiles.ServerTile;
 import com.steve6472.multiplayerTest.structures.Structure;
+import com.steve6472.sge.gfx.Helper;
 import com.steve6472.sge.gfx.Screen;
 import com.steve6472.sge.gfx.Shader;
+import com.steve6472.sge.gfx.Sprite;
 import com.steve6472.sge.gui.Gui;
-import com.steve6472.sge.gui.GuiUtils;
 import com.steve6472.sge.gui.components.ItemList;
 import com.steve6472.sge.main.MainApplication;
 import com.steve6472.sge.main.Util;
 import com.steve6472.sge.main.callbacks.KeyCallback;
 import com.steve6472.sge.main.networking.packet.DataStream;
 import com.steve6472.sge.test.Camera;
+import com.steve6472.sge.main.game.world.Chunk;
+import com.steve6472.sge.main.game.world.World;
 
 public class ServerGui extends Gui
 {
@@ -41,7 +46,9 @@ public class ServerGui extends Gui
 	Server server;
 	public ItemList playerList;
 	public List<PlayerMP> players;
-	public World world0, world1;
+	public GameWorld world0;
+	
+	Sprite worldMap;
 	
 	@Override
 	public void showEvent()
@@ -49,8 +56,22 @@ public class ServerGui extends Gui
 		server = new Server(Integer.parseInt(MenuGui.port.getText()), this);
 		server.start();
 		
-		world0 = generateWorld(0, 16);
-//		world1 = generateWorld(1);
+		world0 = generateWorld(0, 256 * 3);
+		
+		int[] pixels = new int[World.worldWidth * Chunk.chunkWidth * World.worldHeight * Chunk.chunkHeight];
+
+		for (int x = 0; x < World.worldWidth * Chunk.chunkWidth; x++)
+		{
+			for (int y = 0; y < World.worldHeight * Chunk.chunkHeight; y++)
+			{
+				int tile = world0.getTileInWorldSafe(x, y, 0);
+				int color = ServerTile.getTile(tile).getMapColor();
+				pixels[x + y * (World.worldWidth * Chunk.chunkWidth)] = color;
+			}
+		}
+		
+		worldMap = new Sprite(pixels, World.worldWidth * Chunk.chunkWidth, World.worldHeight * Chunk.chunkHeight);
+		
 		
 		getMainApp().getKeyHandler().addKeyCallback(new KeyCallback()
 		{
@@ -59,19 +80,20 @@ public class ServerGui extends Gui
 			{
 				if (key == GLFW.GLFW_KEY_R && action == GLFW.GLFW_PRESS && mods == GLFW.GLFW_MOD_SHIFT)
 				{
-					world0 = generateWorld(0, 128);
+					world0 = generateWorld(0, 256 * 3);
+					updateTimer = 1;
 					for (PlayerMP p : players)
 					{
-						server.sendPacket(new SReplaceWorld(world0, 0), p.getIp(), p.getPort());
-						if (p.worldId == 0)
-							server.sendPacket(new SSetWorld(world0), p.getIp(), p.getPort());
+						p.lastChunkX = Integer.MIN_VALUE;
+						p.lastChunkY = Integer.MIN_VALUE;
+						Arrays.fill(p.visitedChunks, (byte) 0);
 					}
 				}
 				
 				if (key == GLFW.GLFW_KEY_K && action == GLFW.GLFW_PRESS && mods == GLFW.GLFW_MOD_SHIFT)
 				{
-					int x = Util.getRandomInt(world0.getTilesX(), 0);
-					int y = Util.getRandomInt(world0.getTilesY(), 0);
+					int x = Util.getRandomInt(World.worldWidth, 0);
+					int y = Util.getRandomInt(World.worldHeight, 0);
 					int structureId = Util.getRandomInt(Game.structures.length - 1, 0);
 					int worldId = 0;
 					
@@ -90,27 +112,33 @@ public class ServerGui extends Gui
 		});
 	}
 	
-	public World generateWorld(int worldId, int structureCount)
+	public GameWorld generateWorld(int worldId, int structureCount)
 	{
 //		World world = new World(32 * 8, 18 * 8, worldId, server, MultiplayerTest.camera, getMainApp());
-		World world = new World(32, 18, worldId, server, Game.camera, getMainApp());
+		GameWorld world = new GameWorld(worldId, server, getMainApp());
+		world.createBlankChunks();
 		
-		for (int i = 0; i < world.getTilesX(); i++)
+		for (int i = 0; i < World.worldWidth * Chunk.chunkWidth; i++)
 		{
-			for (int j = 0; j < world.getTilesY(); j++)
+			for (int j = 0; j < World.worldHeight * Chunk.chunkHeight; j++)
 			{
-				world.setTile(Tile.grass.getId(), i, j, false);
+//				world.setTile(Tile.grass.getId(), i, j, false);
+				world.setTileInWorld(i, j, 0, ServerTile.grass.getId(), false);
 			}
 		}
 
 		for (int i = 0; i < structureCount; i++)
 		{
-			int x = Util.getRandomInt(world.getTilesX(), 0);
-			int y = Util.getRandomInt(world.getTilesY(), 0);
-			
+			int x = Util.getRandomInt(World.worldWidth * Chunk.chunkWidth, 0);
+			int y = Util.getRandomInt(World.worldHeight * Chunk.chunkHeight, 0);
+
 			Structure str = Game.structures[Util.getRandomInt(Game.structures.length - 1, 0)];
-			str.generateStructure(x, y, world);
+			str.generateStructure(Util.getNumberBetween(0, World.worldWidth * Chunk.chunkWidth - str.getStructureWidth(), x),
+					Util.getNumberBetween(0, World.worldHeight * Chunk.chunkHeight - str.getStructureHeight(), y), world);
+//			str.generateStructure(x, y, world);
 		}
+		
+		world.setTileInWorld(0, 0, ServerTile.rainbow.getId());
 		
 		return world;
 	}
@@ -143,15 +171,15 @@ public class ServerGui extends Gui
 		
 		selectedIndex = (mouseX / 32) + (mouseY / 32) * 32;
 		
-		if (inSelector = GuiUtils.isCursorInRectangle(getMainApp().getMouseHandler(), 0, 0, (int) (val * 128f) + 5, (int) (val * 128f) + 5))
-		{
-			ang += 3;
-			if (ang > 90) ang = 90;
-		} else
-		{
-			ang -= 3;
-			if (ang < 0) ang = 0;
-		}
+//		if (inSelector = GuiUtils.isCursorInRectangle(getMainApp().getMouseHandler(), 0, 0, (int) (val * 128f) + 5, (int) (val * 128f) + 5))
+//		{
+//			ang += 3;
+//			if (ang > 90) ang = 90;
+//		} else
+//		{
+//			ang -= 3;
+//			if (ang < 0) ang = 0;
+//		}
 		
 		val = (float) Math.sin(Math.toRadians(ang));
 		
@@ -168,36 +196,73 @@ public class ServerGui extends Gui
 		
 		if (getMainApp().getMouseHandler().isMouseHolded() && selectedIndex == -1)
 		{
-			selectedTile = hoveredTileX + hoveredTileY * Tile.atlas.getSize();
+			selectedTile = hoveredTileX + hoveredTileY * ServerTile.getAtlas().getSize();
 		}
 
 		if (getMainApp().getMouseHandler().isMouseHolded() && getMainApp().getMouseHandler().getButton() == 1 && selectedIndex != -1)
 		{
-			world0.setTile(selectedTile, selectedIndex, true);
+//			world0.setTile(selectedTile, selectedIndex, true);
+			world0.setTileInWorld(selectedIndex, 0, selectedTile, true);
 		}
 
 		if (getMainApp().getMouseHandler().isMouseHolded() && getMainApp().getMouseHandler().getButton() == 2 && selectedIndex != -1)
 		{
-			selectedTile = world0.getTileId(selectedIndex);
+//			selectedTile = world0.getTileId(selectedIndex);
+			selectedTile = world0.getTileInWorld(selectedIndex, 0);
 		}
 		
 //		MultiplayerTest.camera.setLocation(players.get(0).getLocation().getIntX(), players.get(0).getLocation().getIntY());
 	}
 	
-	public World getWorld(int worldId)
+	public GameWorld getWorld(int worldId)
 	{
-		if (worldId == 0) return world0;
-		if (worldId == 1) return world1;
-		
 		return world0;
 	}
+	
+	public void updateMap()
+	{
+		for (int x = 0; x < World.worldWidth * Chunk.chunkWidth; x++)
+		{
+			for (int y = 0; y < World.worldHeight * Chunk.chunkHeight; y++)
+			{
+				int tile = world0.getTileInWorldSafe(x, y, 0);
+				int color = ServerTile.getTile(tile).getMapColor();
+				worldMap.setPixel(x, y, color);
+			}
+		}
+		
+		glBindTexture(GL_TEXTURE_2D, worldMap.getId());
+
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, worldMap.getWidth(), worldMap.getHeight(), 0, GL_RGBA, GL_UNSIGNED_BYTE, worldMap.getPixels());
+		
+		glDisable(GL_TEXTURE_2D);
+	}
+	
+	int updateTimer = 0;
 
 	@Override
 	public void render(Screen screen)
 	{
-		world0.render(screen);
+		Helper.pushLayer();
 		
-
+		Helper.scale(World.worldWidth * Chunk.chunkWidth / 2, World.worldHeight * Chunk.chunkHeight / 2, 0);
+		Game.drawSprite(Game.fullModel, Game.shader, worldMap);
+		
+		Helper.popLayer();
+		
+		Game.drawFont(mainApp, "UPS:" + mainApp.getFPS(), 5, 5);
+		Game.drawFont(mainApp, "UpdateTimer:" + updateTimer, 5, 15);
+		
+		updateTimer--;
+		if (updateTimer <= 0)
+		{
+			updateTimer = 60;
+			updateMap();
+		}
+		
+		
+		
+		/*
 		for (PlayerMP p : players)
 		{
 			int px = p.getLocation().getIntX();
@@ -249,13 +314,13 @@ public class ServerGui extends Gui
 						hoveredTileX == tile.getIndexX() && hoveredTileY == tile.getIndexY(), Game.shader, pro, Game.camera);
 			}
 		}
-		server.bullets.render(screen);
+		server.bullets.render(screen);*/
 	}
 	
 	public static void renderTile(float x, float y, int tileId, boolean hovered, Shader shader, Matrix4f worldMat, Camera camera)
 	{
-		float tileIndexX = (tileId % Tile.atlas.getSize()) / (float) Tile.atlas.getSize();
-		float tileIndexY = (tileId / Tile.atlas.getSize()) / (float) Tile.atlas.getSize();
+		float tileIndexX = (tileId % ServerTile.getAtlas().getSize()) / (float) ServerTile.getAtlas().getSize();
+		float tileIndexY = (tileId / ServerTile.getAtlas().getSize()) / (float) ServerTile.getAtlas().getSize();
 		
 		Matrix4f tilePos = new Matrix4f().translate(x * -2, y * -2, 0);
 		Matrix4f target = new Matrix4f();
