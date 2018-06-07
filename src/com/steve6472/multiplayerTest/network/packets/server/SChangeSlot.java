@@ -7,11 +7,13 @@
 
 package com.steve6472.multiplayerTest.network.packets.server;
 
-import com.steve6472.multiplayerTest.network.handlers.IClientHandler;
+import com.steve6472.multiplayerTest.PlayerMP;
+import com.steve6472.multiplayerTest.gui.ClientGui;
+import com.steve6472.multiplayerTest.network.Client;
+import com.steve6472.multiplayerTest.network.packets.SPacket;
 import com.steve6472.sge.main.networking.packet.DataStream;
-import com.steve6472.sge.main.networking.packet.Packet;
 
-public class SChangeSlot extends Packet<IClientHandler>
+public class SChangeSlot extends SPacket
 {
 	byte slot;
 	int networkId;
@@ -41,9 +43,17 @@ public class SChangeSlot extends Packet<IClientHandler>
 	}
 
 	@Override
-	public void handlePacket(IClientHandler handler)
+	public void handlePacket(Client client, ClientGui clientGui)
 	{
-		handler.handleSlotChange(this);
+		if (client.networkId == getNetworkId())
+		{
+			clientGui.getClientController().setSlot(getSlot());;
+		} else
+		{
+			 PlayerMP player = client.getPlayer(getNetworkId());
+			 if (player != null)
+				 player.slot = getSlot();
+		}
 	}
 	
 	public byte getSlot()

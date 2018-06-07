@@ -7,11 +7,13 @@
 
 package com.steve6472.multiplayerTest.network.packets.server;
 
-import com.steve6472.multiplayerTest.network.handlers.IClientHandler;
+import com.steve6472.multiplayerTest.PlayerMP;
+import com.steve6472.multiplayerTest.gui.ClientGui;
+import com.steve6472.multiplayerTest.network.Client;
+import com.steve6472.multiplayerTest.network.packets.SPacket;
 import com.steve6472.sge.main.networking.packet.DataStream;
-import com.steve6472.sge.main.networking.packet.Packet;
 
-public class SRotate extends Packet<IClientHandler>
+public class SRotate extends SPacket
 {
 
 	double deg;
@@ -42,9 +44,10 @@ public class SRotate extends Packet<IClientHandler>
 	}
 
 	@Override
-	public void handlePacket(IClientHandler handler)
+	public void handlePacket(Client client, ClientGui clientGui)
 	{
-		handler.handleRotation(this);
+		PlayerMP player = client.getPlayer(getNetworkId());
+		player.setAngle(getDegree());
 	}
 	
 	public double getDegree()

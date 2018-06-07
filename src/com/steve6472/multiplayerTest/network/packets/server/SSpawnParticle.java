@@ -7,13 +7,15 @@
 
 package com.steve6472.multiplayerTest.network.packets.server;
 
+import com.steve6472.multiplayerTest.GameParticle;
 import com.steve6472.multiplayerTest.GameWorld;
-import com.steve6472.multiplayerTest.network.handlers.IClientHandler;
+import com.steve6472.multiplayerTest.gui.ClientGui;
+import com.steve6472.multiplayerTest.network.Client;
+import com.steve6472.multiplayerTest.network.packets.SPacket;
 import com.steve6472.sge.main.Util;
 import com.steve6472.sge.main.networking.packet.DataStream;
-import com.steve6472.sge.main.networking.packet.Packet;
 
-public class SSpawnParticle extends Packet<IClientHandler>
+public class SSpawnParticle extends SPacket
 {
 
 	int x;
@@ -95,9 +97,26 @@ public class SSpawnParticle extends Packet<IClientHandler>
 	}
 
 	@Override
-	public void handlePacket(IClientHandler handler)
+	public void handlePacket(Client client, ClientGui clientGui)
 	{
-		handler.handleSpawnParticlePacket(this);
+		//Util.getRandomInt(3, 1, Util.getRandomLong(i, Long.MIN_VALUE, packet.getSeed()))
+		
+		for (int i = 0; i < getCount(); i++)
+		{
+			double ang = Util.getRandomDouble(360, 0, Util.getRandomLong(i, Long.MIN_VALUE, getSeed()));
+			GameParticle particle = new GameParticle(
+					getX(), 
+					getY(),
+					ang,
+					Util.getRandomInt(20, 10, Util.getRandomLong(i, Long.MIN_VALUE, getSeed())),
+					getHitId(),
+					0,
+					1,
+					getSeed());
+			particle.rotation = (float) ang + Util.getRandomFloat(30, -30);
+			particle.bigData.setDouble(0, Util.getRandomDouble(1.48d + 0.5d, 1.48d - 0.5d));
+			clientGui.world.particles.add(particle);
+		}
 	}
 
 }

@@ -12,10 +12,16 @@ import static org.lwjgl.glfw.GLFW.*;
 import org.joml.Matrix4f;
 import org.joml.Vector4f;
 
+import com.steve6472.multiplayerTest.gui.ClientGui;
+import com.steve6472.multiplayerTest.gui.InventoryRenderer;
+import com.steve6472.multiplayerTest.gui.MenuGui;
+import com.steve6472.multiplayerTest.gui.RenderTestGui;
+import com.steve6472.multiplayerTest.gui.ServerGui;
 import com.steve6472.multiplayerTest.network.packets.client.*;
+import com.steve6472.multiplayerTest.network.packets.client.inv.CCloseInventory;
+import com.steve6472.multiplayerTest.network.packets.client.inv.CMoveItem;
 import com.steve6472.multiplayerTest.network.packets.server.*;
 import com.steve6472.multiplayerTest.network.packets.server.world.*;
-import com.steve6472.multiplayerTest.server.tiles.ServerTile;
 import com.steve6472.multiplayerTest.structures.FlowerStructure;
 import com.steve6472.multiplayerTest.structures.Grass0;
 import com.steve6472.multiplayerTest.structures.Grass1;
@@ -29,6 +35,7 @@ import com.steve6472.multiplayerTest.structures.WallStructure4;
 import com.steve6472.sge.gfx.Font;
 import com.steve6472.sge.gfx.Helper;
 import com.steve6472.sge.gfx.Model;
+import com.steve6472.sge.gfx.RenderMethods;
 import com.steve6472.sge.gfx.Screen;
 import com.steve6472.sge.gfx.Shader;
 import com.steve6472.sge.gfx.Sprite;
@@ -37,7 +44,6 @@ import com.steve6472.sge.main.MainApplication;
 import com.steve6472.sge.main.callbacks.KeyCallback;
 import com.steve6472.sge.main.game.EntityList;
 import com.steve6472.sge.main.game.world.GameCamera;
-import com.steve6472.sge.main.game.world.GameTile;
 import com.steve6472.sge.main.networking.packet.DisconnectPacket;
 import com.steve6472.sge.main.networking.packet.Packet;
 import com.steve6472.sge.test.Camera;
@@ -48,6 +54,8 @@ public class Game extends MainApplication
 	public ServerGui serverGui;
 	public ClientGui clientGui;
 	public RenderTestGui renderTestGui;
+	
+	public static InventoryRenderer inventoryRenderer;
 	
 	public static EntityList entityList;
 	public static GameCamera camera;
@@ -132,6 +140,10 @@ public class Game extends MainApplication
 		Packet.addPacket(29,  	SInitClientData.class);
 		Packet.addPacket(30,  	CChangeSlot.class);
 		Packet.addPacket(31,  	SChangeSlot.class);
+		Packet.addPacket(32,  	SOpenInventory.class);
+		Packet.addPacket(33,  	CCloseInventory.class);
+		Packet.addPacket(34,  	CMoveItem.class);
+		Packet.addPacket(35,  	CKey.class);
 		
 		//FIXME
 //		GameTile.initGameTiles(ServerTile.getAtlas(), 32, 32, new Shader("shaders\\basev2"), 31, 17);
@@ -180,16 +192,36 @@ public class Game extends MainApplication
 		tileShade = new Shader("shaders\\shade");
 		rectShader = new Shader("shaders\\rect");
 		
+		inventoryRenderer = new InventoryRenderer(this);
+		
 		Helper.initHelper();
+		RenderMethods.init(camera);
 
 		getKeyHandler().addKeyCallback(new KeyCallback()
 		{
 			@Override
 			public void invoke(int key, int scancode, int action, int mods)
 			{
+				if (clientGui != null)
+				{
+					clientGui.client.sendPacket(new CKey(key, action, mods));
+				}
+				
 				if (key == GLFW_KEY_F2 && action == GLFW_PRESS)
 				{
 					takeScreenshot();
+				}
+				
+				if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
+				{
+					if (inventoryRenderer.isVisible())
+					{
+						inventoryRenderer.hideInventory();
+						clientGui.client.sendPacket(new CCloseInventory());
+					} else
+					{
+						exit();
+					}
 				}
 			}
 		});
@@ -203,7 +235,7 @@ public class Game extends MainApplication
 //				camera.setSize(width, height);
 //			}
 //		});
-
+		addBasicResizeOrtho2();
 		new MenuGui(this);
 	}
 	
@@ -366,6 +398,8 @@ public class Game extends MainApplication
 	@Override
 	public void tick()
 	{
+		camera.setSize(getCurrentWidth(), getCurrentHeight());
+		inventoryRenderer.tick(this);
 		tickGui();
 	}
 
@@ -399,12 +433,18 @@ public class Game extends MainApplication
 	{
 		return null;
 	}
+	
+	@Override
+	protected boolean escExit()
+	{
+		return false;
+	}
 
 	@Override
 	public void setWindowHints()
 	{
 //		glfwWindowHint(GLFW_DECORATED, GLFW_FALSE);
-//		glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
+		glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
 //		glfwWindowHint(GLFW_FLOATING, GLFW_TRUE);
 	}
 	

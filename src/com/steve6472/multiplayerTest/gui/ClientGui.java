@@ -5,10 +5,7 @@
 *
 ***********************/
 
-package com.steve6472.multiplayerTest;
-
-//import static org.lwjgl.glfw.GLFW.*;
-import static org.lwjgl.opengl.GL11.*;
+package com.steve6472.multiplayerTest.gui;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -16,7 +13,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-
+import com.steve6472.multiplayerTest.Bullet;
+import com.steve6472.multiplayerTest.Event;
+import com.steve6472.multiplayerTest.Game;
+import com.steve6472.multiplayerTest.GameItem;
+import com.steve6472.multiplayerTest.GameWorld;
+import com.steve6472.multiplayerTest.PlayerMP;
 import com.steve6472.multiplayerTest.animations.SwingAnimationV3;
 import com.steve6472.multiplayerTest.network.Client;
 import com.steve6472.multiplayerTest.network.packets.client.CSetName;
@@ -46,7 +48,7 @@ public class ClientGui extends Gui
 {
 	private static final long serialVersionUID = -8970752667717685758L;
 	
-	Client client;
+	public Client client;
 	public List<PlayerMP> players;
 	public IObjectManipulator<Bullet> bullets;
 	public GameWorld world;
@@ -54,6 +56,8 @@ public class ClientGui extends Gui
 	public Map<Integer, Event> events;
 	public Map<Integer, Animation> animations;
 	public SGArray<Animation> runningAnimations;
+	
+	public boolean[] solidTiles;
 	
 	ClientController clientController;
 	
@@ -114,6 +118,8 @@ public class ClientGui extends Gui
 		client.sendPacket(new CSetName(name));
 		
 		clientController = new ClientController(getMainApp(), client, this);
+		
+//		Game.inventoryRenderer.showInventory(clientController.getInventory());
 	}
 
 	@Override
@@ -139,7 +145,7 @@ public class ClientGui extends Gui
 			if (a.hasEnded())
 			{
 				if (a instanceof SwingAnimationV3)
-					clientController.swing = false;
+					clientController.setSwing(false);
 				removeAnimations.addObject(i);
 				continue;
 			}
@@ -164,28 +170,7 @@ public class ClientGui extends Gui
 	
 	private void update()
 	{
-		Game.tileSprite.setPixels(data.tileTextures);
-		
-		Game.tileSprite.setSize(data.atlasSize * 32, data.atlasSize * 32);
-		
-		int[] newPixels = new int[data.tileTextures.length];
-		
-		for (int i = 0; i < newPixels.length; i++)
-		{
-			int oldPixel = data.tileTextures[i];
-			int r = Screen.getRed(oldPixel);
-			int g = Screen.getGreen(oldPixel);
-			int b = Screen.getBlue(oldPixel);
-			int a = Screen.getAlpha(oldPixel);
-			int newPixel = Screen.getColor(b, g, r, a);
-			newPixels[i] = newPixel;
-		}
-		
-		glBindTexture(GL_TEXTURE_2D, Game.tileSprite.getId());
-
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, data.atlasSize * 32, data.atlasSize * 32, 0, GL_RGBA, GL_UNSIGNED_BYTE, newPixels);
-		
-		glDisable(GL_TEXTURE_2D);
+		Game.tileSprite.change(data.atlasSize * 32, data.atlasSize * 32, Sprite.fromRGBtoBGR(data.tileTextures));
 
 		Game.tileSprite.save(new File("atlas.png"));
 		
@@ -194,6 +179,8 @@ public class ClientGui extends Gui
 		GameTile.initGameTiles(atlas, 32, 32, new Shader("shaders\\basev2"), 31, 17);
 		Chunk.initChunks(data.chunkWidth, data.chunkHeight, data.chunkLayers);
 		World.initWorlds(data.worldWidth, data.worldHeight);
+		
+		solidTiles = data.solid;
 		
 		world = generateWorld(0);
 	}
@@ -267,7 +254,7 @@ public class ClientGui extends Gui
 			
 			Helper.popLayer();
 
-			if (!clientController.swing)
+			if (!clientController.isSwing())
 			{
 				Helper.pushLayer();
 				
@@ -323,6 +310,8 @@ public class ClientGui extends Gui
 		
 		bullets.render(screen);
 		//Render Particles
+		
+		Game.inventoryRenderer.render(mainApp);
 
 		Game.drawFont(mainApp, "UPS:" + mainApp.getFPS(), 5, 5);
 		Game.drawFont(mainApp, "Score: " + score, 5, 15);

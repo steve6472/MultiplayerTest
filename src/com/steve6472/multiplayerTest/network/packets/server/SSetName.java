@@ -7,11 +7,13 @@
 
 package com.steve6472.multiplayerTest.network.packets.server;
 
-import com.steve6472.multiplayerTest.network.handlers.IClientHandler;
+import com.steve6472.multiplayerTest.PlayerMP;
+import com.steve6472.multiplayerTest.gui.ClientGui;
+import com.steve6472.multiplayerTest.network.Client;
+import com.steve6472.multiplayerTest.network.packets.SPacket;
 import com.steve6472.sge.main.networking.packet.DataStream;
-import com.steve6472.sge.main.networking.packet.Packet;
 
-public class SSetName extends Packet<IClientHandler>
+public class SSetName extends SPacket
 {
 	
 	String name;
@@ -40,13 +42,14 @@ public class SSetName extends Packet<IClientHandler>
 		this.networkId = input.readInt();
 		this.name = input.readString();
 	}
-
-	@Override
-	public void handlePacket(IClientHandler handler)
-	{
-		handler.handleSetName(this);
-	}
 	
+	@Override
+	public void handlePacket(Client client, ClientGui clientGui)
+	{
+		PlayerMP player = client.getPlayer(getNetworkId());
+		player.setName(getName());
+	}
+
 	public String getName()
 	{
 		return name;

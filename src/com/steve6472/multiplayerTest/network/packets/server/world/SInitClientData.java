@@ -7,12 +7,14 @@
 
 package com.steve6472.multiplayerTest.network.packets.server.world;
 
-import com.steve6472.multiplayerTest.network.handlers.IClientHandler;
+import com.steve6472.multiplayerTest.gui.ClientGui;
+import com.steve6472.multiplayerTest.network.Client;
+import com.steve6472.multiplayerTest.network.packets.SPacket;
+import com.steve6472.multiplayerTest.server.tiles.ServerTile;
 import com.steve6472.sge.main.game.Atlas;
 import com.steve6472.sge.main.networking.packet.DataStream;
-import com.steve6472.sge.main.networking.packet.Packet;
 
-public class SInitClientData extends Packet<IClientHandler>
+public class SInitClientData extends SPacket
 {
 	public int worldWidth;
 	public int worldHeight;
@@ -23,6 +25,7 @@ public class SInitClientData extends Packet<IClientHandler>
 
 	public int[] tileTextures;
 	public int atlasSize;
+	public boolean[] solid;
 	
 	public SInitClientData(int worldWidth, int worldHeight, int chunkWidth, int chunkHeight, int chunkLayers, Atlas atlas)
 	{
@@ -35,6 +38,14 @@ public class SInitClientData extends Packet<IClientHandler>
 		
 		this.tileTextures = atlas.getAtlas().getPixels();
 		this.atlasSize = atlas.getSize();
+		
+		this.solid = new boolean[ServerTile.getTiles().getSize()];
+		
+		for (int i = 0; i < ServerTile.getTiles().getSize(); i++)
+		{
+			ServerTile tile = ServerTile.getTile(i);
+			solid[i] = tile.isSolid();
+		}
 	}
 	
 	public SInitClientData()
@@ -54,6 +65,7 @@ public class SInitClientData extends Packet<IClientHandler>
 		output.writeIntArr(tileTextures);
 		output.writeInt(atlasSize);
 		
+		output.writeBooleanArr(solid);
 	}
 
 	@Override
@@ -68,12 +80,16 @@ public class SInitClientData extends Packet<IClientHandler>
 		
 		this.tileTextures = input.readIntArr();
 		this.atlasSize = input.readInt();
+		
+		this.solid = input.readBooleanArr();
+	}
+	
+	@Override
+	public void handlePacket(Client client, ClientGui clientGui)
+	{
+		ClientGui.data = this;
+		ClientGui.update = true;
 	}
 
-	@Override
-	public void handlePacket(IClientHandler handler)
-	{
-		handler.handleClientDataInit(this);
-	}
 
 }

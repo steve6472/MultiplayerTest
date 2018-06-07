@@ -7,8 +7,8 @@
 
 package com.steve6472.multiplayerTest.server.events;
 
-import com.steve6472.multiplayerTest.ClientGui;
 import com.steve6472.multiplayerTest.Event;
+import com.steve6472.multiplayerTest.gui.ClientGui;
 import com.steve6472.sge.main.game.world.World;
 import com.steve6472.sge.main.networking.packet.DataStream;
 

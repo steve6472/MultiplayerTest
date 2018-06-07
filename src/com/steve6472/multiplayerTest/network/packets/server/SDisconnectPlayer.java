@@ -8,11 +8,12 @@
 package com.steve6472.multiplayerTest.network.packets.server;
 
 import com.steve6472.multiplayerTest.PlayerMP;
-import com.steve6472.multiplayerTest.network.handlers.IClientHandler;
+import com.steve6472.multiplayerTest.gui.ClientGui;
+import com.steve6472.multiplayerTest.network.Client;
+import com.steve6472.multiplayerTest.network.packets.SPacket;
 import com.steve6472.sge.main.networking.packet.DataStream;
-import com.steve6472.sge.main.networking.packet.Packet;
 
-public class SDisconnectPlayer extends Packet<IClientHandler>
+public class SDisconnectPlayer extends SPacket
 {
 	int networkId = 0;
 
@@ -41,11 +42,20 @@ public class SDisconnectPlayer extends Packet<IClientHandler>
 	{
 		return networkId;
 	}
-
+	
 	@Override
-	public void handlePacket(IClientHandler handler)
+	public void handlePacket(Client client, ClientGui clientGui)
 	{
-		handler.handleDisconnectPlayerPacket(this);
+		System.out.println("Player #" + getNetworkId() + " is disconnecting");
+		int remove = -1;
+		for (PlayerMP pl : clientGui.players)
+		{
+			remove++;
+			if (pl.getNetworkId() == getNetworkId())
+				break;
+		}
+		
+		if (remove != -1)
+			clientGui.players.remove(remove);
 	}
-
 }

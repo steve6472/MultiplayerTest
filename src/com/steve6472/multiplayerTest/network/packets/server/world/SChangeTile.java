@@ -7,11 +7,12 @@
 
 package com.steve6472.multiplayerTest.network.packets.server.world;
 
-import com.steve6472.multiplayerTest.network.handlers.IClientHandler;
+import com.steve6472.multiplayerTest.gui.ClientGui;
+import com.steve6472.multiplayerTest.network.Client;
+import com.steve6472.multiplayerTest.network.packets.SPacket;
 import com.steve6472.sge.main.networking.packet.DataStream;
-import com.steve6472.sge.main.networking.packet.Packet;
 
-public class SChangeTile extends Packet<IClientHandler>
+public class SChangeTile extends SPacket
 {
 	int index;
 	int id;
@@ -44,12 +45,6 @@ public class SChangeTile extends Packet<IClientHandler>
 		this.worldId = input.readInt();
 	}
 
-	@Override
-	public void handlePacket(IClientHandler handler)
-	{
-		handler.handleChangeTile(this);
-	}
-
 	public int getIndex()
 	{
 		return index;
@@ -63,6 +58,12 @@ public class SChangeTile extends Packet<IClientHandler>
 	public int getWorldId()
 	{
 		return worldId;
+	}
+	
+	@Override
+	public void handlePacket(Client client, ClientGui clientGui)
+	{
+		clientGui.world.setTileInWorld(getIndex(), 0, getId(), false);
 	}
 
 }

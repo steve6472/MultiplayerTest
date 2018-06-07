@@ -5,11 +5,13 @@
 *
 ***********************/
 
-package com.steve6472.multiplayerTest;
+package com.steve6472.multiplayerTest.gui;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 
+import com.steve6472.multiplayerTest.Game;
+import com.steve6472.multiplayerTest.server.items.ServerItem;
 import com.steve6472.multiplayerTest.server.tiles.ServerTile;
 import com.steve6472.sge.gfx.Screen;
 import com.steve6472.sge.gui.Gui;
@@ -35,8 +37,8 @@ public class MenuGui extends Gui
 	}
 	
 	TextField name;
-	static TextField ip;
-	static TextField port;
+	public static TextField ip;
+	public static TextField port;
 
 	@Override
 	public void createGui()
@@ -76,6 +78,7 @@ public class MenuGui extends Gui
 			public void click()
 			{
 				ServerTile.initTiles();
+				ServerItem.initItems();
 //				GameTile.initGameTiles(Tile.atlas, 32, 32, new Shader("shaders\\basev2"), 31, 17);
 				Chunk.initChunks(8, 8, 1);
 				World.initWorlds(64, 64);
@@ -105,6 +108,29 @@ public class MenuGui extends Gui
 		});
 		addComponent(runClient);
 		
+		Button runBoth = new Button("Run Both");
+		runBoth.setLocation(124 * 3, 35);
+		runBoth.setSize(100, 30);
+		runBoth.addEvent(new ButtonEvents()
+		{
+			@Override
+			public void click()
+			{
+				ServerTile.initTiles();
+				ServerItem.initItems();
+				Chunk.initChunks(8, 8, 1);
+				World.initWorlds(64, 64);
+				((Game) getMainApp()).serverGui.showGui();
+				((Game) getMainApp()).serverGui.render = false;
+				
+				ClientGui.name = name.getText();
+				((Game) getMainApp()).clientGui.showGui();
+				hideGui();
+				getMainApp().resetOrtho();
+			}
+		});
+		addComponent(runBoth);
+		
 		Button runRenderTest = new Button("Render Test");
 		runRenderTest.setLocation(124 + 110, 35);
 		runRenderTest.setSize(100, 30);
@@ -116,7 +142,7 @@ public class MenuGui extends Gui
 				((Game) getMainApp()).renderTestGui.showGui();
 				hideGui();
 //				getMainApp().perspectiveGL(85f, (float) getMainApp().getCurrentWidth() / (float) getMainApp().getCurrentHeight(), 0.1f, 1000f);
-				getMainApp().resetOrtho();
+//				getMainApp().resetOrtho();
 			}
 		});
 		addComponent(runRenderTest);

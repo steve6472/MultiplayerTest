@@ -10,9 +10,9 @@ package com.steve6472.multiplayerTest.network.handlers;
 import com.steve6472.multiplayerTest.network.packets.client.CChangeSlot;
 import com.steve6472.multiplayerTest.network.packets.client.CChat;
 import com.steve6472.multiplayerTest.network.packets.client.CConfirmChunk;
-import com.steve6472.multiplayerTest.network.packets.client.CMouseButton;
 import com.steve6472.multiplayerTest.network.packets.client.CMovePacket;
 import com.steve6472.multiplayerTest.network.packets.client.CPing;
+import com.steve6472.multiplayerTest.network.packets.client.CRequestInventory;
 import com.steve6472.multiplayerTest.network.packets.client.CRequestTile;
 import com.steve6472.multiplayerTest.network.packets.client.CRotate;
 import com.steve6472.multiplayerTest.network.packets.client.CSetName;
@@ -23,7 +23,7 @@ public interface IServerHandler extends IPacketHandler
 {
 	public void handleMovePacket(CMovePacket packet);
 	
-	public void handleMouseButtonPacket(CMouseButton packet);
+//	public void handleMouseButtonPacket(CMouseButton packet);
 	
 	public void handleRequestTile(CRequestTile packet);
 	
@@ -40,4 +40,6 @@ public interface IServerHandler extends IPacketHandler
 	public void handleChunkConfirm(CConfirmChunk packet);
 	
 	public void handleSlotChange(CChangeSlot packet);
+
+	public void handleInventoryRequest(CRequestInventory packet);
 }

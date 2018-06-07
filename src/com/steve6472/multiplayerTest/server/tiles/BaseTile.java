@@ -10,10 +10,12 @@ package com.steve6472.multiplayerTest.server.tiles;
 import com.steve6472.multiplayerTest.Bullet;
 import com.steve6472.multiplayerTest.GameWorld;
 import com.steve6472.multiplayerTest.PlayerMP;
+import com.steve6472.multiplayerTest.server.tiles.tileData.TileDataController;
 
 public class BaseTile extends ServerTile
 {
 	public boolean createHitParticles = false;
+	public TileDataController tileDataController = null;
 
 	public BaseTile(int id, String sprite, boolean isSolid, boolean castShadow, int light, int mapColor)
 	{
@@ -44,10 +46,26 @@ public class BaseTile extends ServerTile
 		}
 	}
 	
+	public boolean hasTileData()
+	{
+		return tileDataController != null;
+	}
+	
 	public BaseTile createHitParticles()
 	{
 		createHitParticles = true;
 		return this;
+	}
+	
+	public BaseTile setTileDataController(TileDataController tileDataController)
+	{
+		this.tileDataController = tileDataController;
+		return this;
+	}
+	
+	public TileDataController getTileDataController()
+	{
+		return this.tileDataController;
 	}
 
 }

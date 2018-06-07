@@ -39,7 +39,7 @@ public abstract class ServerTile extends GameTile
 		this.mapColor = mapColor;
 		this.light = light;
 		this.castShadow = castShadow;
-		this.sprite = sprite;
+		this.sprite = sprite == null || sprite.isEmpty() ? null :"tiles\\" + sprite;
 	}
 
 	public static ServerTile air;
@@ -75,6 +75,7 @@ public abstract class ServerTile extends GameTile
 	public static ServerTile wallBlueprint;
 	
 	public static ServerTile rainbow;
+	public static ServerTile chest;
 	
 	public static void initTiles()
 	{
@@ -110,7 +111,9 @@ public abstract class ServerTile extends GameTile
 		
 		wallBlueprint 			= new BlueprintTile(28, "wallBlueprint.png", 0xffff8080, 6, 13).init();
 		
-		rainbow 				= new BaseTile(29, "rainbow.png", true, true, 15, 0xff000000).createHitParticles().init();
+		rainbow 				= new BaseTile(29, "rainbow.png", true, true, 15, 0xff61f7ff).createHitParticles().init();
+		
+		chest 					= new Chest(30, "chest.png").init();
 		
 		atlas = new Atlas(sprites.toList());
 		atlas.create(32, (x, y, i) -> tiles.getObject(i).setIndexes(x, y, i));

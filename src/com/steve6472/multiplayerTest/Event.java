@@ -9,6 +9,7 @@ package com.steve6472.multiplayerTest;
 
 import java.io.Serializable;
 
+import com.steve6472.multiplayerTest.gui.ClientGui;
 import com.steve6472.sge.main.networking.packet.DataStream;
 
 public abstract class Event implements Serializable

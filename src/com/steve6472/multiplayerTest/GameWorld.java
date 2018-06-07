@@ -9,10 +9,12 @@ package com.steve6472.multiplayerTest;
 
 import org.joml.Matrix4f;
 
+import com.steve6472.multiplayerTest.gui.ClientGui;
 import com.steve6472.multiplayerTest.network.Server;
 import com.steve6472.multiplayerTest.network.packets.server.SSpawnParticle;
 import com.steve6472.multiplayerTest.network.packets.server.world.SChangeTile;
 import com.steve6472.multiplayerTest.server.tiles.ServerTile;
+import com.steve6472.multiplayerTest.server.tiles.tileData.TileData;
 import com.steve6472.sge.gfx.Helper;
 import com.steve6472.sge.gfx.Model;
 import com.steve6472.sge.gfx.Shader;
@@ -33,7 +35,7 @@ public class GameWorld extends World
 
 	public GameWorld(int worldId, Server server, /*GameCamera camera, */MainApplication mainApp)
 	{
-		super();
+		createBlankChunks(GameChunk.class);
 		this.server = server;
 		this.mainApp = mainApp;
 		this.worldId = worldId;
@@ -99,6 +101,23 @@ public class GameWorld extends World
 		if (notifyClients)
 		{
 			notifyClients(cx, cy, index, id);
+		}
+	}
+	
+	public TileData getTileData(int x, int y, int layer)
+	{
+		int cx = x / Chunk.chunkWidth;
+		int cy = y / Chunk.chunkHeight;
+		if (cx < 0 || cy < 0 || cx > worldWidth || cy > worldHeight)
+			return null;
+		GameChunk c = (GameChunk) getChunk(cx, cy);
+		if (c != null)
+		{
+			return c.getTileData(x - cx * Chunk.chunkWidth, y - cy * Chunk.chunkHeight, layer);
+		} else
+		{
+			System.out.println("Chunk is null");
+			return null;
 		}
 	}
 	

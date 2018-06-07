@@ -5,7 +5,7 @@
 *
 ***********************/
 
-package com.steve6472.multiplayerTest;
+package com.steve6472.multiplayerTest.gui;
 
 import static org.lwjgl.opengl.GL11.*;
 
@@ -16,7 +16,12 @@ import java.util.List;
 import org.joml.Matrix4f;
 import org.lwjgl.glfw.GLFW;
 
+import com.steve6472.multiplayerTest.Game;
+import com.steve6472.multiplayerTest.GameChunk;
+import com.steve6472.multiplayerTest.GameWorld;
+import com.steve6472.multiplayerTest.PlayerMP;
 import com.steve6472.multiplayerTest.network.Server;
+import com.steve6472.multiplayerTest.network.packets.server.SOpenInventory;
 import com.steve6472.multiplayerTest.network.packets.server.SRunEvent;
 import com.steve6472.multiplayerTest.server.tiles.ServerTile;
 import com.steve6472.multiplayerTest.structures.Structure;
@@ -41,6 +46,8 @@ public class ServerGui extends Gui
 		super(mainApp);
 		switchRender();
 	}
+	
+	public boolean render = true;
 
 	private static final long serialVersionUID = 8028366502068225295L;
 	Server server;
@@ -104,9 +111,15 @@ public class ServerGui extends Gui
 								.writeInt(y)
 								.writeInt(structureId)
 								.writeInt(worldId)), 
-								p.getIp(), p.getPort());
+								p);
 					}
 					Game.structures[structureId].generateStructure(x, y, world0);
+				}
+				
+				if (key == GLFW.GLFW_KEY_O && action == GLFW.GLFW_PRESS && mods == GLFW.GLFW_MOD_SHIFT)
+				{
+					for (PlayerMP p : players)
+						server.sendPacket(new SOpenInventory(p.createClientInventory(), 5, 8));
 				}
 			}
 		});
@@ -116,7 +129,7 @@ public class ServerGui extends Gui
 	{
 //		World world = new World(32 * 8, 18 * 8, worldId, server, MultiplayerTest.camera, getMainApp());
 		GameWorld world = new GameWorld(worldId, server, getMainApp());
-		world.createBlankChunks();
+		world.createBlankChunks(GameChunk.class);
 		
 		for (int i = 0; i < World.worldWidth * Chunk.chunkWidth; i++)
 		{
@@ -138,7 +151,8 @@ public class ServerGui extends Gui
 //			str.generateStructure(x, y, world);
 		}
 		
-		world.setTileInWorld(0, 0, ServerTile.rainbow.getId());
+		world.setTileInWorld(0, 0, ServerTile.rainbow.getId(), false);
+		world.setTileInWorld(1, 0, ServerTile.chest.getId(), false);
 		
 		return world;
 	}
@@ -214,11 +228,6 @@ public class ServerGui extends Gui
 //		MultiplayerTest.camera.setLocation(players.get(0).getLocation().getIntX(), players.get(0).getLocation().getIntY());
 	}
 	
-	public GameWorld getWorld(int worldId)
-	{
-		return world0;
-	}
-	
 	public void updateMap()
 	{
 		for (int x = 0; x < World.worldWidth * Chunk.chunkWidth; x++)
@@ -243,6 +252,9 @@ public class ServerGui extends Gui
 	@Override
 	public void render(Screen screen)
 	{
+		if (!render)
+			return;
+		
 		Helper.pushLayer();
 		
 		Helper.scale(World.worldWidth * Chunk.chunkWidth / 2, World.worldHeight * Chunk.chunkHeight / 2, 0);

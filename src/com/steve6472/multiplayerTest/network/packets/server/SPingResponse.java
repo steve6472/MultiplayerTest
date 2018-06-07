@@ -7,11 +7,12 @@
 
 package com.steve6472.multiplayerTest.network.packets.server;
 
-import com.steve6472.multiplayerTest.network.handlers.IClientHandler;
+import com.steve6472.multiplayerTest.gui.ClientGui;
+import com.steve6472.multiplayerTest.network.Client;
+import com.steve6472.multiplayerTest.network.packets.SPacket;
 import com.steve6472.sge.main.networking.packet.DataStream;
-import com.steve6472.sge.main.networking.packet.Packet;
 
-public class SPingResponse extends Packet<IClientHandler>
+public class SPingResponse extends SPacket
 {
 
 	@Override
@@ -25,9 +26,9 @@ public class SPingResponse extends Packet<IClientHandler>
 	}
 
 	@Override
-	public void handlePacket(IClientHandler handler)
+	public void handlePacket(Client client, ClientGui clientGui)
 	{
-		handler.handlePingResponse(this);
+		clientGui.getClientController().setPing(System.currentTimeMillis() - clientGui.getClientController().pingStart);
 	}
 
 }

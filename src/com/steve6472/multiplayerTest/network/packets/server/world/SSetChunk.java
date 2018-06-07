@@ -7,11 +7,14 @@
 
 package com.steve6472.multiplayerTest.network.packets.server.world;
 
-import com.steve6472.multiplayerTest.network.handlers.IClientHandler;
+import com.steve6472.multiplayerTest.gui.ClientGui;
+import com.steve6472.multiplayerTest.network.Client;
+import com.steve6472.multiplayerTest.network.packets.SPacket;
+import com.steve6472.multiplayerTest.network.packets.client.CConfirmChunk;
+import com.steve6472.sge.main.game.world.Chunk;
 import com.steve6472.sge.main.networking.packet.DataStream;
-import com.steve6472.sge.main.networking.packet.Packet;
 
-public class SSetChunk extends Packet<IClientHandler>
+public class SSetChunk extends SPacket
 {
 	
 	int[] tiles;
@@ -46,9 +49,22 @@ public class SSetChunk extends Packet<IClientHandler>
 	}
 
 	@Override
-	public void handlePacket(IClientHandler handler)
+	public void handlePacket(Client client, ClientGui clientGui)
 	{
-		handler.handleSetChunk(this);
+//		System.out.println("Setting chunk " + packet.getChunkX() + "/" + packet.getChunkY());
+		if (getTiles() == null)
+		{
+			clientGui.world.setChunk(getChunkX(), getChunkY(), null);
+			
+//			client.sendPacket(new CConfirmChunk(packet.getChunkX(), packet.getChunkY()));
+		} else
+		{
+			Chunk c = new Chunk();
+			c.setTiles(getTiles(), 0);
+			clientGui.world.setChunk(getChunkX(), getChunkY(), c);
+
+			client.sendPacket(new CConfirmChunk(getChunkX(), getChunkY()));
+		}
 	}
 	
 	public int[] getTiles()

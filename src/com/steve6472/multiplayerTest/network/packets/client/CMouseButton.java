@@ -7,14 +7,22 @@
 
 package com.steve6472.multiplayerTest.network.packets.client;
 
-import com.steve6472.multiplayerTest.network.handlers.IServerHandler;
-import com.steve6472.sge.main.networking.packet.DataStream;
-import com.steve6472.sge.main.networking.packet.Packet;
+import java.net.DatagramPacket;
 
-public class CMouseButton extends Packet<IServerHandler>
+import com.steve6472.multiplayerTest.PlayerMP;
+import com.steve6472.multiplayerTest.gui.ServerGui;
+import com.steve6472.multiplayerTest.network.Server;
+import com.steve6472.multiplayerTest.network.packets.CPacket;
+import com.steve6472.multiplayerTest.network.packets.server.SSpawnBullet;
+import com.steve6472.multiplayerTest.server.tiles.ServerTile;
+import com.steve6472.sge.main.Util;
+import com.steve6472.sge.main.networking.packet.DataStream;
+
+public class CMouseButton extends CPacket
 {
 
 	int x, y;
+	int tx, ty;
 	int button;
 	/**
 	 * 0 - Press
@@ -26,10 +34,14 @@ public class CMouseButton extends Packet<IServerHandler>
 	{
 	}
 	
-	public CMouseButton(int x, int y, int button, int action)
+	public CMouseButton(int x, int y, int tx, int ty, int button, int action)
 	{
 		this.x = x;
 		this.y = y;
+		
+		this.tx = tx;
+		this.ty = ty;
+		
 		this.button = button;
 		this.action = action;
 	}
@@ -39,6 +51,10 @@ public class CMouseButton extends Packet<IServerHandler>
 	{
 		output.writeInt(x);
 		output.writeInt(y);
+		
+		output.writeInt(tx);
+		output.writeInt(ty);
+		
 		output.writeInt(button);
 		output.writeInt(action);
 	}
@@ -48,6 +64,10 @@ public class CMouseButton extends Packet<IServerHandler>
 	{
 		this.x = input.readInt();
 		this.y = input.readInt();
+		
+		this.tx = input.readInt();
+		this.ty = input.readInt();
+		
 		this.button = input.readInt();
 		this.action = input.readInt();
 	}
@@ -73,9 +93,81 @@ public class CMouseButton extends Packet<IServerHandler>
 	}
 
 	@Override
-	public void handlePacket(IServerHandler handler)
+	public void handlePacket(Server server, ServerGui serverGui)
 	{
-		handler.handleMouseButtonPacket(this);
+		{
+			PlayerMP player = server.getPlayer(getSender());
+			{
+				if (player != null)
+				{
+//					int tx = (getX() - serverGui.getMainApp().getWidth() / 2 + player.getX()) / 32;
+//					int ty = (getY() - serverGui.getMainApp().getHeight() / 2 + player.getY()) / 32;
+
+					int id = serverGui.world0.getTileInWorldSafe(tx, ty, 0);
+					ServerTile.getTile(id).mouseEvent(tx, ty, player, getAction(), getButton(), serverGui.world0);
+				}
+			}
+		}
+
+		if (getAction() == 0 && getButton() == 1) //LMB
+		{
+			PlayerMP player = server.getPlayer(getSender());
+			player.lastUpdate = System.currentTimeMillis();
+			if (player.slot == 2)
+			{
+				int px = player.lastValidLocation.getIntX() + 16;
+				int py = player.lastValidLocation.getIntY() + 16;
+				SSpawnBullet bulletPacket = new SSpawnBullet(px, py,
+						Util.countAngle(getX(), getY(), serverGui.getMainApp().getWidth() / 2, serverGui.getMainApp().getHeight() / 2)
+								+ Util.getRandomDouble(2, -2),
+						Server.nextNetworkId++, player.getNetworkId());
+				server.bullets.add(bulletPacket.createBullet());
+				server.sendPacket(bulletPacket);
+			} else if (player.slot == 1)
+			{
+//				int tx = (getX() - serverGui.getMainApp().getWidth() / 2 + player.getX()) / 32;
+//				int ty = (getY() - serverGui.getMainApp().getHeight() / 2 + player.getY()) / 32;
+
+				if (Util.getDistance(tx, ty, player.getTileX(), player.getTileY()) <= 4)
+				{
+					int currentId = serverGui.world0.getTileInWorld(tx, ty, 0);
+					if (currentId == ServerTile.wallBlueprint.getId())
+					{
+						serverGui.world0.setTileInWorld(tx, ty, 0, ServerTile.grass.getId(), true);
+					}
+				}
+			}
+		} else if (getAction() == 0 && getButton() == 2) //RMB
+		{
+			PlayerMP player = server.getPlayer(getSender());
+			if (player == null)
+			{
+				printCantFindPlayerErrorMessage(getSender());
+				return;
+			} else
+			{
+				if (player.slot == 1)
+				{
+//					int tx = (getX() - serverGui.getMainApp().getWidth() / 2 + player.getX()) / 32;
+//					int ty = (getY() - serverGui.getMainApp().getHeight() / 2 + player.getY()) / 32;
+
+					if (Util.getDistance(tx, ty, player.getTileX(), player.getTileY()) <= 4)
+					{
+						int currentId = serverGui.world0.getTileInWorldSafe(tx, ty, 0);
+
+						if (currentId == ServerTile.grass.getId() || currentId == ServerTile.grassWithFlowers0.getId() || currentId == ServerTile.destroyedWall.getId())
+						{
+							serverGui.world0.setTileInWorld(tx, ty, 0, ServerTile.wallBlueprint.getId(), true);
+						}
+					}
+				}
+			}
+		}
+	}
+	
+	private void printCantFindPlayerErrorMessage(DatagramPacket datagram)
+	{
+		System.err.println("Can't find player from datagram: " + datagram.getAddress().getHostAddress() + ":" + datagram.getPort());
 	}
 
 }

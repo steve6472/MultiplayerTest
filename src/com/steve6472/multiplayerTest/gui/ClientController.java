@@ -5,13 +5,17 @@
 *
 ***********************/
 
-package com.steve6472.multiplayerTest;
+package com.steve6472.multiplayerTest.gui;
 
 import static org.lwjgl.glfw.GLFW.*;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import com.steve6472.multiplayerTest.Game;
+import com.steve6472.multiplayerTest.GameInventory;
+import com.steve6472.multiplayerTest.GameItem;
+import com.steve6472.multiplayerTest.GameWorld;
 import com.steve6472.multiplayerTest.animations.SwingAnimationV3;
 import com.steve6472.multiplayerTest.network.Client;
 import com.steve6472.multiplayerTest.network.packets.client.CChangeSlot;
@@ -22,19 +26,19 @@ import com.steve6472.multiplayerTest.network.packets.client.CPing;
 import com.steve6472.multiplayerTest.network.packets.client.CRotate;
 import com.steve6472.multiplayerTest.network.packets.client.CUpdatePacket;
 import com.steve6472.sge.main.MainApplication;
-import com.steve6472.sge.main.Util;
 import com.steve6472.sge.main.callbacks.CharCallback;
 import com.steve6472.sge.main.callbacks.MouseButtonCallback;
 import com.steve6472.sge.main.game.Vec2;
-import com.steve6472.sge.main.game.inventory.Inventory;
-import com.steve6472.sge.main.game.inventory.ItemSlot;
+import com.steve6472.sge.main.game.inventory.Item;
+import com.steve6472.sge.main.game.world.Chunk;
+import com.steve6472.sge.main.game.world.World;
 
 public class ClientController
 {
-	public Vec2 loc, oldLoc;
+	public Vec2 loc, oldLoc, newLoc;
 	public List<String> chatText;
 	boolean swing = false;
-	public Inventory inventory;
+	public GameInventory inventory;
 	private String chatFieldText = "";
 	private boolean openedChat = false;
 	public byte slot = 0;
@@ -47,10 +51,11 @@ public class ClientController
 		this.client = client;
 		this.clientGui = clientGui;
 		
-		inventory = new Inventory(null, ItemSlot.class, 5);
+		inventory = new GameInventory(null, 10, 5, Item.AIR);
 		chatText = new ArrayList<String>();
 		loc = new Vec2(Game.spawnX, Game.spawnY);
 		oldLoc = loc.clone();
+		newLoc = new Vec2();
 		
 		lastUpdate = System.currentTimeMillis();
 		
@@ -85,16 +90,23 @@ public class ClientController
 		{
 			double speed = 1;
 			
+			newLoc.setLocation(loc);
+			
 			if (mainApp.isKeyPressed(GLFW_KEY_LEFT_SHIFT))
 				speed = 4;
 			if (mainApp.isKeyPressed(GLFW_KEY_LEFT_CONTROL))
 				speed = 16;
 			
 			if (mainApp.getKeyHandler().isKeyPressed(GLFW_KEY_W))
-				loc.move2(newRotation, speed);
+				newLoc.move2(newRotation, speed);
 
 			if (mainApp.getKeyHandler().isKeyPressed(GLFW_KEY_S))
-				loc.move2(newRotation + 180, speed);
+				newLoc.move2(newRotation + 180, speed);
+			
+			if (!inTile(newLoc))
+			{
+				loc.setLocation(newLoc);
+			}
 
 			delay++;
 			if (delay >= 2)
@@ -114,6 +126,52 @@ public class ClientController
 		}
 	}
 	
+	public boolean inTile(Vec2 loc)
+	{
+		int px = loc.getIntX();
+		int py = loc.getIntY();
+		
+		int s = 4;
+		
+		int px00 = (px + s) / 32;
+		int py00 = (py + s) / 32;
+
+		int px10 = (px + 32 - s) / 32;
+		int py10 = (py + s) / 32;
+
+		int px01 = (px + s) / 32;
+		int py01 = (py + 32 - s) / 32;
+
+		int px11 = (px + 32 - s) / 32;
+		int py11 = (py + 32 - s) / 32;
+		
+		if (client.getWorld() == null)
+			return false;
+		
+		if (!isTileLocOutOfBounds(px00, py00, client.getWorld()))
+			if (clientGui.solidTiles[client.getWorld().getTileInWorld(px00, py00, 0)])
+				return true;
+
+		if (!isTileLocOutOfBounds(px01, py01, client.getWorld()))
+			if (clientGui.solidTiles[client.getWorld().getTileInWorld(px01, py01, 0)])
+				return true;
+
+		if (!isTileLocOutOfBounds(px10, py10, client.getWorld()))
+			if (clientGui.solidTiles[client.getWorld().getTileInWorld(px10, py10, 0)])
+				return true;
+
+		if (!isTileLocOutOfBounds(px11, py11, client.getWorld()))
+			if (clientGui.solidTiles[client.getWorld().getTileInWorld(px11, py11, 0)])
+				return true;
+		
+		return false;
+	}
+
+	public boolean isTileLocOutOfBounds(int x, int y, GameWorld world)
+	{
+		return (x < 0 || y < 0 || x >= (World.worldWidth * Chunk.chunkWidth) || y >= (World.worldHeight * Chunk.chunkHeight));
+	}
+
 	public void setupHandlers(MainApplication mainApp)
 	{
 		mainApp.getKeyHandler().addKeyCallback((key, scancode, action, mod) ->
@@ -195,12 +253,14 @@ public class ClientController
 			@Override
 			public void invoke(int x, int y, int button, int action, int mods)
 			{
+				int tx = (x - mainApp.getCurrentWidth() / 2 + getLoc().getIntX() + 16) / 32;
+				int ty = (y - mainApp.getCurrentHeight() / 2 + getLoc().getIntY() + 16) / 32;
 				if (action == GLFW_PRESS)
 				{
-					client.sendPacket(new CMouseButton(x, y, mainApp.getMouseHandler().getButton(), 0));
+					client.sendPacket(new CMouseButton(x, y, tx, ty, mainApp.getMouseHandler().getButton(), 0));
 				} else if (action == GLFW_RELEASE)
 				{
-					client.sendPacket(new CMouseButton(x, y, mainApp.getMouseHandler().getButton(), 1));
+					client.sendPacket(new CMouseButton(x, y, tx, ty, mainApp.getMouseHandler().getButton(), 1));
 				}
 			}
 		});
@@ -211,7 +271,17 @@ public class ClientController
 		return slot;
 	}
 	
-	public Inventory getInventory()
+	public boolean isSwing()
+	{
+		return swing;
+	}
+	
+	public void setSwing(boolean swing)
+	{
+		this.swing = swing;
+	}
+	
+	public GameInventory getInventory()
 	{
 		return inventory;
 	}

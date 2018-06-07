@@ -16,11 +16,11 @@ import com.steve6472.multiplayerTest.Bullet;
 import com.steve6472.multiplayerTest.Game;
 import com.steve6472.multiplayerTest.GameWorld;
 import com.steve6472.multiplayerTest.PlayerMP;
-import com.steve6472.multiplayerTest.ServerGui;
+import com.steve6472.multiplayerTest.gui.ServerGui;
 import com.steve6472.multiplayerTest.network.handlers.ServerHandler;
+import com.steve6472.multiplayerTest.network.packets.CPacket;
 import com.steve6472.multiplayerTest.network.packets.server.*;
 import com.steve6472.multiplayerTest.network.packets.server.world.SInitClientData;
-import com.steve6472.multiplayerTest.network.packets.server.world.SSetChunk;
 import com.steve6472.multiplayerTest.server.events.BuildStructure;
 import com.steve6472.multiplayerTest.server.tiles.ServerTile;
 import com.steve6472.sge.main.SGArray;
@@ -35,7 +35,7 @@ import com.steve6472.sge.main.game.world.World;
 public class Server extends UDPServer
 {
 
-	ServerGui sg;
+	public ServerGui sg;
 	public static final int moveLimit = 64;
 
 	/* Kick player after --- ms of inactivity */
@@ -48,7 +48,7 @@ public class Server extends UDPServer
 	/* Lag-meter */
 	public static long updateTime = 0;
 	
-	private static final byte lagChunkDelay = 15;
+	public static final byte lagChunkDelay = 15;
 
 	public Server(int port, ServerGui sg)
 	{
@@ -141,155 +141,10 @@ public class Server extends UDPServer
 
 		for (PlayerMP p : sg.players)
 		{
-			if (!p.checkLocation)
-				continue;
-
-			int px = p.getX() - 16;
-			int py = p.getY() - 16;
-			
-			int cx = p.getChunkX();
-			int cy = p.getChunkY();
-			
-			tickRemove(p);
-			tickChunks(p, cx, cy);
-			
-			int s = 4;
-
-			int px00 = (px + s) / 32;
-			int py00 = (py + s) / 32;
-
-			int px10 = (px + 32 - s) / 32;
-			int py10 = (py + s) / 32;
-
-			int px01 = (px + s) / 32;
-			int py01 = (py + 32 - s) / 32;
-
-			int px11 = (px + 32 - s) / 32;
-			int py11 = (py + 32 - s) / 32;
-
-			boolean isValid = true;
-
-			if (!isTileLocOutOfBounds(px00, py00, sg.getWorld(p.worldId)))
-				if (ServerTile.getTile(getPlayersWorld(p).getTileInWorld(px00, py00, 0)).isSolid())
-					isValid = moveToLastValidLocation(p);
-
-			if (!isTileLocOutOfBounds(px01, py01, sg.getWorld(p.worldId)))
-				if (ServerTile.getTile(getPlayersWorld(p).getTileInWorld(px01, py01, 0)).isSolid())
-					isValid = moveToLastValidLocation(p);
-
-			if (!isTileLocOutOfBounds(px10, py10, sg.getWorld(p.worldId)))
-				if (ServerTile.getTile(getPlayersWorld(p).getTileInWorld(px10, py10, 0)).isSolid())
-					isValid = moveToLastValidLocation(p);
-
-			if (!isTileLocOutOfBounds(px11, py11, sg.getWorld(p.worldId)))
-				if (ServerTile.getTile(getPlayersWorld(p).getTileInWorld(px11, py11, 0)).isSolid())
-					isValid = moveToLastValidLocation(p);
-			
-			if (isValid)
-				p.lastValidLocation = p.getNewLocation();
+			p.tick();
 		}
 
 		updateTime = System.currentTimeMillis() - tickStart;
-	}
-	
-	SGArray<Integer> toBeRemoved = new SGArray<Integer>();
-	
-	private static final int REVEAL_RANGE = 5;
-	private static final int DELETE_RANGE = 11;
-
-	private void tickChunks(PlayerMP p, int cx, int cy)
-	{
-		if (cx != p.lastChunkX || cy != p.lastChunkY)
-		{
-			p.lastChunkX = cx;
-			p.lastChunkY = cy;
-
-			for (int i = 0; i < REVEAL_RANGE; i++)
-			{
-				for (int j = 0; j < REVEAL_RANGE; j++)
-				{
-					int x = Util.getNumberBetween(0, World.worldWidth, cx + i - 1);
-					int y = Util.getNumberBetween(0, World.worldHeight, cy + j - 1);
-
-					if (x >= 0 && y >= 0 && x < World.worldWidth && y < World.worldHeight)
-					{
-						byte b = p.visitedChunks[x + y * World.worldWidth];
-						if (b == 0)
-						{
-							p.visitedChunks[x + y * World.worldWidth] = lagChunkDelay;
-							p.tickVCH.addObject(x + y * World.worldWidth);
-							sendPacket(new SSetChunk(sg.world0.getChunk(x, y).getMap().getObject(0), x, y), p);
-						}
-					}
-				}
-			}
-			
-			int minx = Util.getNumberBetween(0, World.worldWidth, cx - DELETE_RANGE / 2);
-			int miny = Util.getNumberBetween(0, World.worldHeight, cy - DELETE_RANGE / 2);
-			
-			int maxx = Util.getNumberBetween(0, World.worldWidth, cx + DELETE_RANGE / 2);
-			int maxy = Util.getNumberBetween(0, World.worldHeight, cy + DELETE_RANGE / 2);
-
-			for (int i = 0; i < World.worldWidth; i++)
-			{
-				for (int j = 0; j < World.worldHeight; j++)
-				{
-					if (!Util.isInRectangle(minx, miny, maxx, maxy, i, j))
-					{
-						if (p.visitedChunks[i + j * World.worldWidth] == -1)
-						{
-							sendPacket(new SSetChunk(null, i, j), p);
-							p.visitedChunks[i + j * World.worldWidth] = 0;
-						}
-					}
-				}
-			}
-		}
-	}
-
-	private void tickRemove(PlayerMP p)
-	{
-		for (int i = 0; i < p.tickVCH.getSize(); i++)
-		{
-			int index = p.tickVCH.getObject(i);
-			byte b = p.visitedChunks[index];
-
-			if (b > 0 && b <= lagChunkDelay)
-				p.visitedChunks[index]--;
-
-			if (p.visitedChunks[index] == 0 || p.visitedChunks[index] == -1)
-				toBeRemoved.addObject(i);
-		}
-
-		toBeRemoved.reverseArray();
-
-		for (int i : toBeRemoved)
-		{
-			int index = p.tickVCH.getObject(i);
-			byte b = p.visitedChunks[index];
-			if (index >= 0 && index < World.worldWidth * World.worldHeight && b == 0)
-			{
-				p.visitedChunks[index] = lagChunkDelay;
-				p.tickVCH.addObject(index);
-				sendPacket(new SSetChunk(sg.world0.getChunk(index % World.worldWidth, index / World.worldHeight).getMap().getObject(0),
-						index % World.worldWidth, index / World.worldHeight), p);
-			}
-			p.tickVCH.remove(i);
-		}
-
-		toBeRemoved.clear();
-	}
-
-	private GameWorld getPlayersWorld(PlayerMP player)
-	{
-		return sg.world0;
-	}
-
-	private boolean moveToLastValidLocation(PlayerMP player)
-	{
-		sendPacket(new STeleportPlayer(player.lastValidLocation.getIntX(), player.lastValidLocation.getIntY(), player.getNetworkId()), player);
-
-		return false;
 	}
 
 	public boolean isTileLocOutOfBounds(int x, int y, GameWorld world)
@@ -308,8 +163,6 @@ public class Server extends UDPServer
 		}
 
 		PlayerMP newPlayer = addNewPlayer(packet.getAddress(), packet.getPort(), Game.spawnX, Game.spawnY);
-		newPlayer.worldId = 0;
-		newPlayer.visitedChunks = new byte[World.worldWidth * World.worldHeight];
 		sendPacket(new SAddEvent(new BuildStructure()), packet);
 		sendPacket(new SSetNetworkId(newPlayer.getNetworkId()), packet);
 		sendPacket(new SInitClientData(World.worldWidth, World.worldHeight, Chunk.chunkWidth, Chunk.chunkHeight, Chunk.layerCount, ServerTile.getAtlas()), packet);
@@ -340,6 +193,22 @@ public class Server extends UDPServer
 			sg.players.remove(remove);
 		}
 	}
+	
+	@SuppressWarnings("unchecked")
+	@Override
+	public void handlePacket(Packet<?> packet, int packetId, DatagramPacket p)
+	{
+		if (packet instanceof CPacket)
+		{
+			CPacket sPacket = (CPacket) packet;
+			sPacket.setSender(p);
+			sPacket.handlePacket(this, sg);
+		} else
+		{
+			packet.setSender(p);
+			((Packet<IPacketHandler>)packet).handlePacket(packetHandler);
+		}
+	}
 
 	public PlayerMP getPlayer(DatagramPacket playerIp)
 	{
@@ -365,9 +234,31 @@ public class Server extends UDPServer
 
 	public PlayerMP addNewPlayer(InetAddress ip, int port, int x, int y)
 	{
-		PlayerMP player = new PlayerMP(ip, port, x, y);
+		PlayerMP player = new PlayerMP(ip, port, x, y, this);
 		player.updateBox();
+		player.worldId = 0;
+		player.visitedChunks = new byte[World.worldWidth * World.worldHeight];
 		sg.players.add(player);
+
+		for (int i = 0; i < PlayerMP.REVEAL_RANGE; i++)
+		{
+			for (int j = 0; j < PlayerMP.REVEAL_RANGE; j++)
+			{
+				int X = Util.getNumberBetween(0, World.worldWidth, player.getChunkX() + i - 1);
+				int Y = Util.getNumberBetween(0, World.worldHeight, player.getChunkY() + j - 1);
+
+				if (X >= 0 && Y >= 0 && X < World.worldWidth && Y < World.worldHeight)
+				{
+					byte b = player.visitedChunks[X + Y * World.worldWidth];
+					if (b == 0)
+					{
+						player.visitedChunks[X + Y * World.worldWidth] = lagChunkDelay;
+						player.tickVCH.addObject(X + Y * World.worldWidth);
+					}
+				}
+			}
+		}
+		
 		return player;
 	}
 	
@@ -396,5 +287,10 @@ public class Server extends UDPServer
 	public List<PlayerMP> getPlayers()
 	{
 		return sg.players;
+	}
+	
+	public GameWorld getWorld()
+	{
+		return sg.world0;
 	}
 }
