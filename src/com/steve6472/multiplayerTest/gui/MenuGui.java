@@ -19,6 +19,7 @@ import com.steve6472.sge.gui.GuiUtils;
 import com.steve6472.sge.gui.components.Background;
 import com.steve6472.sge.gui.components.Button;
 import com.steve6472.sge.gui.components.ButtonEvents;
+import com.steve6472.sge.gui.components.NumberSelector;
 import com.steve6472.sge.gui.components.TextField;
 import com.steve6472.sge.main.MainApplication;
 import com.steve6472.sge.main.game.world.Chunk;
@@ -39,6 +40,7 @@ public class MenuGui extends Gui
 	TextField name;
 	public static TextField ip;
 	public static TextField port;
+	NumberSelector renderDistance;
 
 	@Override
 	public void createGui()
@@ -101,6 +103,7 @@ public class MenuGui extends Gui
 //				Chunk.initChunks(16, 16, 1);
 //				World.initWorlds(2, 2);
 				ClientGui.name = name.getText();
+				ClientGui.renderDistance = renderDistance.getValue();
 				((Game) getMainApp()).clientGui.showGui();
 				hideGui();
 				getMainApp().resetOrtho();
@@ -124,6 +127,7 @@ public class MenuGui extends Gui
 				((Game) getMainApp()).serverGui.render = false;
 				
 				ClientGui.name = name.getText();
+				ClientGui.renderDistance = renderDistance.getValue();
 				((Game) getMainApp()).clientGui.showGui();
 				hideGui();
 				getMainApp().resetOrtho();
@@ -141,11 +145,35 @@ public class MenuGui extends Gui
 			{
 				((Game) getMainApp()).renderTestGui.showGui();
 				hideGui();
-//				getMainApp().perspectiveGL(85f, (float) getMainApp().getCurrentWidth() / (float) getMainApp().getCurrentHeight(), 0.1f, 1000f);
-//				getMainApp().resetOrtho();
 			}
 		});
 		addComponent(runRenderTest);
+		
+		
+		renderDistance = new NumberSelector()
+		{
+			private static final long serialVersionUID = 8636502609300328260L;
+
+			@Override
+			public void removeValue()
+			{
+				super.removeValue();
+				super.removeValue();
+			}
+			
+			@Override
+			public void addValue()
+			{
+				super.addValue();
+				super.addValue();
+			}
+		};
+		renderDistance.setLocation(124 + 110, 75);
+		renderDistance.setSize(100, 30);
+		renderDistance.setMaxValue(11);
+		renderDistance.setMinValue(3);
+		renderDistance.setValue(7);
+		addComponent(renderDistance);
 	}
 
 	@Override

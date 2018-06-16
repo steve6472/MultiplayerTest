@@ -7,11 +7,11 @@
 
 package com.steve6472.multiplayerTest;
 
+import com.steve6472.sge.gfx.Camera;
 import com.steve6472.sge.gfx.Shader;
 import com.steve6472.sge.gfx.SmallNineSlice;
 import com.steve6472.sge.gui.GuiUtils;
 import com.steve6472.sge.main.MainApplication;
-import com.steve6472.sge.test.Camera;
 
 public class Button
 {

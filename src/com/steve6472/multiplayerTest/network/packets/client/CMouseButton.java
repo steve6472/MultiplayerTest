@@ -21,8 +21,18 @@ import com.steve6472.sge.main.networking.packet.DataStream;
 public class CMouseButton extends CPacket
 {
 
+	/**
+	 * pressed position on screen
+	 */
 	int x, y;
+	/**
+	 * Pressed tile coord
+	 */
 	int tx, ty;
+	/**
+	 * screen width & height
+	 */
+	int sw, sh;
 	int button;
 	/**
 	 * 0 - Press
@@ -34,13 +44,16 @@ public class CMouseButton extends CPacket
 	{
 	}
 	
-	public CMouseButton(int x, int y, int tx, int ty, int button, int action)
+	public CMouseButton(int x, int y, int tx, int ty, int sw, int sh, int button, int action)
 	{
 		this.x = x;
 		this.y = y;
 		
 		this.tx = tx;
 		this.ty = ty;
+		
+		this.sw = sw;
+		this.sh = sh;
 		
 		this.button = button;
 		this.action = action;
@@ -55,6 +68,9 @@ public class CMouseButton extends CPacket
 		output.writeInt(tx);
 		output.writeInt(ty);
 		
+		output.writeInt(sw);
+		output.writeInt(sh);
+		
 		output.writeInt(button);
 		output.writeInt(action);
 	}
@@ -67,6 +83,9 @@ public class CMouseButton extends CPacket
 		
 		this.tx = input.readInt();
 		this.ty = input.readInt();
+		
+		this.sw = input.readInt();
+		this.sh = input.readInt();
 		
 		this.button = input.readInt();
 		this.action = input.readInt();
@@ -100,9 +119,6 @@ public class CMouseButton extends CPacket
 			{
 				if (player != null)
 				{
-//					int tx = (getX() - serverGui.getMainApp().getWidth() / 2 + player.getX()) / 32;
-//					int ty = (getY() - serverGui.getMainApp().getHeight() / 2 + player.getY()) / 32;
-
 					int id = serverGui.world0.getTileInWorldSafe(tx, ty, 0);
 					ServerTile.getTile(id).mouseEvent(tx, ty, player, getAction(), getButton(), serverGui.world0);
 				}
@@ -118,16 +134,13 @@ public class CMouseButton extends CPacket
 				int px = player.lastValidLocation.getIntX() + 16;
 				int py = player.lastValidLocation.getIntY() + 16;
 				SSpawnBullet bulletPacket = new SSpawnBullet(px, py,
-						Util.countAngle(getX(), getY(), serverGui.getMainApp().getWidth() / 2, serverGui.getMainApp().getHeight() / 2)
+						Util.countAngle(getX(), getY(), sw / 2, sh / 2)
 								+ Util.getRandomDouble(2, -2),
 						Server.nextNetworkId++, player.getNetworkId());
 				server.bullets.add(bulletPacket.createBullet());
 				server.sendPacket(bulletPacket);
 			} else if (player.slot == 1)
 			{
-//				int tx = (getX() - serverGui.getMainApp().getWidth() / 2 + player.getX()) / 32;
-//				int ty = (getY() - serverGui.getMainApp().getHeight() / 2 + player.getY()) / 32;
-
 				if (Util.getDistance(tx, ty, player.getTileX(), player.getTileY()) <= 4)
 				{
 					int currentId = serverGui.world0.getTileInWorld(tx, ty, 0);
@@ -148,9 +161,6 @@ public class CMouseButton extends CPacket
 			{
 				if (player.slot == 1)
 				{
-//					int tx = (getX() - serverGui.getMainApp().getWidth() / 2 + player.getX()) / 32;
-//					int ty = (getY() - serverGui.getMainApp().getHeight() / 2 + player.getY()) / 32;
-
 					if (Util.getDistance(tx, ty, player.getTileX(), player.getTileY()) <= 4)
 					{
 						int currentId = serverGui.world0.getTileInWorldSafe(tx, ty, 0);

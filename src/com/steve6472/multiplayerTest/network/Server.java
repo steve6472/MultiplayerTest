@@ -64,52 +64,7 @@ public class Server extends UDPServer
 		bullets.tick(true);
 		for (Bullet b : bullets.getAll())
 		{
-			if (b == null)
-				continue;
-			for (PlayerMP p : sg.players)
-			{
-				
-				if (b.getShooterNetworkId() == p.getNetworkId())
-					continue;
-
-				if (b.getBox().intersects(p.getBox()))
-				{
-					p.score -= 2;
-					if (p.score < 0)
-						p.score = 0;
-
-					sendPacket(new SSetScore(p.score, p.getNetworkId()));
-
-					PlayerMP shooter = getPlayer(b.getShooterNetworkId());
-
-					if (shooter != null)
-						sendPacket(new SSetScore(shooter.score(), b.getShooterNetworkId()));
-					else
-						System.err.println("Can't find player with networkId " + b.getShooterNetworkId());
-
-					sendPacket(new SDeleteBullet(b.getNetworkId()));
-					b.setDead();
-				}
-			}
-
-			int bulletTileX = b.getLocation().getIntX() / 32;
-			int bulletTileY = b.getLocation().getIntY() / 32;
-
-			if (isTileLocOutOfBounds(bulletTileX, bulletTileY, sg.world0))
-			{
-				sendPacket(new SDeleteBullet(b.getNetworkId()));
-				b.setDead();
-				continue;
-			}
-
-			if (ServerTile.getTile(sg.world0.getTileInWorld(bulletTileX, bulletTileY, 0)).isSolid())
-			{
-				sendPacket(new SDeleteBullet(b.getNetworkId()));
-
-				int id = ServerTile.getTile(sg.world0.getTileInWorld(bulletTileX, bulletTileY, 0)).getId();
-				ServerTile.getTile(id).bulletCollision(bulletTileX, bulletTileY, b, sg.world0);
-				b.setDead();
-			}
+			b.tick(sg, this);
 		}
 
 		for (Iterator<PlayerMP> iter = sg.players.iterator(); iter.hasNext();)
@@ -209,6 +164,11 @@ public class Server extends UDPServer
 			((Packet<IPacketHandler>)packet).handlePacket(packetHandler);
 		}
 	}
+	
+	public PlayerMP getPlayer(CPacket packet)
+	{
+		return getPlayer(packet.getSender());
+	}
 
 	public PlayerMP getPlayer(DatagramPacket playerIp)
 	{
@@ -240,9 +200,9 @@ public class Server extends UDPServer
 		player.visitedChunks = new byte[World.worldWidth * World.worldHeight];
 		sg.players.add(player);
 
-		for (int i = 0; i < PlayerMP.REVEAL_RANGE; i++)
+		for (int i = 0; i < player.renderDistance; i++)
 		{
-			for (int j = 0; j < PlayerMP.REVEAL_RANGE; j++)
+			for (int j = 0; j < player.renderDistance; j++)
 			{
 				int X = Util.getNumberBetween(0, World.worldWidth, player.getChunkX() + i - 1);
 				int Y = Util.getNumberBetween(0, World.worldHeight, player.getChunkY() + j - 1);

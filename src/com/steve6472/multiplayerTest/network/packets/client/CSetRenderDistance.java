@@ -1,55 +1,56 @@
 /**********************
 * Created by steve6472 (Mirek Jozefek)
-* On date: 7. 6. 2018
+* On date: 16. 6. 2018
 * Project: MultiplayerTest
 *
 ***********************/
 
 package com.steve6472.multiplayerTest.network.packets.client;
 
+import com.steve6472.multiplayerTest.PlayerMP;
 import com.steve6472.multiplayerTest.gui.ServerGui;
 import com.steve6472.multiplayerTest.network.Server;
+import com.steve6472.multiplayerTest.network.handlers.ServerHandler;
 import com.steve6472.multiplayerTest.network.packets.CPacket;
 import com.steve6472.sge.main.networking.packet.DataStream;
 
-public class CKey extends CPacket
+public class CSetRenderDistance extends CPacket
 {
-	
-	int key;
-	int action;
-	int mods;
 
-	public CKey(int key, int action, int mods)
+	int renderDistance = 0;
+	
+	public CSetRenderDistance(int renderDistance)
 	{
-		this.key = key;
-		this.action = action;
-		this.mods = mods;
+		this.renderDistance = renderDistance;
 	}
 	
-	public CKey()
+	public CSetRenderDistance()
 	{
 	}
 
 	@Override
 	public void handlePacket(Server server, ServerGui serverGui)
 	{
-		//Open player's inventory!
+		PlayerMP player = server.getPlayer(this);
+		if (player == null)
+		{
+			ServerHandler.printCantFindPlayerErrorMessage(getSender());
+		} else
+		{
+			player.renderDistance = renderDistance;
+		}
 	}
 
 	@Override
 	public void output(DataStream output)
 	{
-		output.writeInt(key);
-		output.writeInt(action);
-		output.writeInt(mods);
+		output.writeInt(renderDistance);
 	}
 
 	@Override
 	public void input(DataStream input)
 	{
-		key = input.readInt();
-		action = input.readInt();
-		mods = input.readInt();
+		this.renderDistance = input.readInt();
 	}
 
 }

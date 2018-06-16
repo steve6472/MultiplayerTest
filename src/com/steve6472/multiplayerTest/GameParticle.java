@@ -10,6 +10,7 @@ package com.steve6472.multiplayerTest;
 import org.joml.Matrix4f;
 
 import com.steve6472.multiplayerTest.gui.ClientGui;
+import com.steve6472.sge.gfx.Camera;
 import com.steve6472.sge.gfx.Helper;
 import com.steve6472.sge.gfx.Model;
 import com.steve6472.sge.gfx.Screen;
@@ -20,7 +21,6 @@ import com.steve6472.sge.main.game.Atlas;
 import com.steve6472.sge.main.game.Vec2;
 import com.steve6472.sge.main.game.particle.AngledParticle;
 import com.steve6472.sge.main.game.world.GameCamera;
-import com.steve6472.sge.test.Camera;
 
 public class GameParticle extends AngledParticle
 {

@@ -53,6 +53,8 @@ public class PlayerMP extends BaseEntity
 	public int inventoryTileY = -1;
 	public int inventoryTileL = -1;
 	
+	public int renderDistance = 5;
+	
 	/**
 	 * 0 		- not loaded
 	 * 1-127 	- load delay
@@ -68,9 +70,6 @@ public class PlayerMP extends BaseEntity
 	
 	SGArray<Integer> toBeRemoved = new SGArray<Integer>();
 	
-	public static final int REVEAL_RANGE = 5;
-	public static final int DELETE_RANGE = 11;
-
 	/**
 	 * Server init
 	 * @param ip
@@ -96,9 +95,6 @@ public class PlayerMP extends BaseEntity
 		gi.getSlot(2).setItemId(38);
 		
 		setInventory(gi);
-
-//		lastChunkX = x / 32 / Chunk.chunkWidth;
-//		lastChunkY = y / 32 / Chunk.chunkHeight;
 	}
 	
 	public int[] createClientInventory()
@@ -193,29 +189,24 @@ public class PlayerMP extends BaseEntity
 
 		boolean isValid = true;
 
-		if (!isTileLocOutOfBounds(px00, py00, server.getWorld()))
+		if (!Game.isTileLocOutOfBounds(px00, py00, server.getWorld()))
 			if (ServerTile.getTile(server.getWorld().getTileInWorld(px00, py00, 0)).isSolid())
 				isValid = moveToLastValidLocation(this);
 
-		if (!isTileLocOutOfBounds(px01, py01, server.getWorld()))
+		if (!Game.isTileLocOutOfBounds(px01, py01, server.getWorld()))
 			if (ServerTile.getTile(server.getWorld().getTileInWorld(px01, py01, 0)).isSolid())
 				isValid = moveToLastValidLocation(this);
 
-		if (!isTileLocOutOfBounds(px10, py10, server.getWorld()))
+		if (!Game.isTileLocOutOfBounds(px10, py10, server.getWorld()))
 			if (ServerTile.getTile(server.getWorld().getTileInWorld(px10, py10, 0)).isSolid())
 				isValid = moveToLastValidLocation(this);
 
-		if (!isTileLocOutOfBounds(px11, py11, server.getWorld()))
+		if (!Game.isTileLocOutOfBounds(px11, py11, server.getWorld()))
 			if (ServerTile.getTile(server.getWorld().getTileInWorld(px11, py11, 0)).isSolid())
 				isValid = moveToLastValidLocation(this);
 		
 		if (isValid)
 			lastValidLocation = getNewLocation();
-	}
-
-	public boolean isTileLocOutOfBounds(int x, int y, GameWorld world)
-	{
-		return (x < 0 || y < 0 || x >= (World.worldWidth * Chunk.chunkWidth) || y >= (World.worldHeight * Chunk.chunkHeight));
 	}
 
 	private boolean moveToLastValidLocation(PlayerMP player)
@@ -241,15 +232,15 @@ public class PlayerMP extends BaseEntity
 			/*
 			 * Add new chunks if in range
 			 */
-			for (int i = 0; i < REVEAL_RANGE; i++)
+			for (int i = 0; i < renderDistance; i++)
 			{
-				for (int j = 0; j < REVEAL_RANGE; j++)
+				for (int j = 0; j < renderDistance; j++)
 				{
 					/*
-					 * Divided by 2 cut of a bug. Idk why this works but it works so whatever
+					 * Divided by 2 cuz of a bug. Idk why this works but it works so whatever
 					 */
-					int x = Util.getNumberBetween(0, World.worldWidth, cx + i - REVEAL_RANGE / 2);
-					int y = Util.getNumberBetween(0, World.worldHeight, cy + j - REVEAL_RANGE / 2);
+					int x = Util.getNumberBetween(0, World.worldWidth, cx + i - renderDistance / 2);
+					int y = Util.getNumberBetween(0, World.worldHeight, cy + j - renderDistance / 2);
 
 					if (x >= 0 && y >= 0 && x < World.worldWidth && y < World.worldHeight)
 					{
@@ -264,11 +255,11 @@ public class PlayerMP extends BaseEntity
 				}
 			}
 			
-			int minx = Util.getNumberBetween(0, World.worldWidth, cx - DELETE_RANGE / 2);
-			int miny = Util.getNumberBetween(0, World.worldHeight, cy - DELETE_RANGE / 2);
+			int minx = Util.getNumberBetween(0, World.worldWidth, cx - (renderDistance + 6) / 2);
+			int miny = Util.getNumberBetween(0, World.worldHeight, cy - (renderDistance + 6) / 2);
 			
-			int maxx = Util.getNumberBetween(0, World.worldWidth, cx + DELETE_RANGE / 2);
-			int maxy = Util.getNumberBetween(0, World.worldHeight, cy + DELETE_RANGE / 2);
+			int maxx = Util.getNumberBetween(0, World.worldWidth, cx + (renderDistance + 6) / 2);
+			int maxy = Util.getNumberBetween(0, World.worldHeight, cy + (renderDistance + 6) / 2);
 
 			/*
 			 * Deleting chunks out of player's range

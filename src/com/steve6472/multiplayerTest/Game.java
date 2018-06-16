@@ -32,6 +32,7 @@ import com.steve6472.multiplayerTest.structures.WallStructure1;
 import com.steve6472.multiplayerTest.structures.WallStructure2;
 import com.steve6472.multiplayerTest.structures.WallStructure3;
 import com.steve6472.multiplayerTest.structures.WallStructure4;
+import com.steve6472.sge.gfx.Camera;
 import com.steve6472.sge.gfx.Font;
 import com.steve6472.sge.gfx.Helper;
 import com.steve6472.sge.gfx.Model;
@@ -43,10 +44,11 @@ import com.steve6472.sge.gfx.Texture;
 import com.steve6472.sge.main.MainApplication;
 import com.steve6472.sge.main.callbacks.KeyCallback;
 import com.steve6472.sge.main.game.EntityList;
+import com.steve6472.sge.main.game.world.Chunk;
 import com.steve6472.sge.main.game.world.GameCamera;
+import com.steve6472.sge.main.game.world.World;
 import com.steve6472.sge.main.networking.packet.DisconnectPacket;
 import com.steve6472.sge.main.networking.packet.Packet;
-import com.steve6472.sge.test.Camera;
 import com.steve6472.sge.test.ShaderTest2;
 
 public class Game extends MainApplication
@@ -121,7 +123,7 @@ public class Game extends MainApplication
 		Packet.addPacket(10, 	CMovePacket.class);
 		Packet.addPacket(11, 	SAddAnimation.class);
 		Packet.addPacket(12, 	SChangeTile.class);
-		Packet.addPacket(13, 	CRequestTile.class);
+		Packet.addPacket(13, 	CSetRenderDistance.class);
 		Packet.addPacket(14, 	SSetNetworkId.class);
 		Packet.addPacket(15, 	SSetScore.class);
 		Packet.addPacket(16, 	SSetName.class);
@@ -202,7 +204,7 @@ public class Game extends MainApplication
 			@Override
 			public void invoke(int key, int scancode, int action, int mods)
 			{
-				if (clientGui != null)
+				if (clientGui != null && clientGui.client != null)
 				{
 					clientGui.client.sendPacket(new CKey(key, action, mods));
 				}
@@ -237,6 +239,11 @@ public class Game extends MainApplication
 //		});
 		addBasicResizeOrtho2();
 		new MenuGui(this);
+	}
+
+	public static boolean isTileLocOutOfBounds(int x, int y, GameWorld world)
+	{
+		return (x < 0 || y < 0 || x >= (World.worldWidth * Chunk.chunkWidth) || y >= (World.worldHeight * Chunk.chunkHeight));
 	}
 	
 	public float[] createLine()
@@ -275,7 +282,7 @@ public class Game extends MainApplication
 		
 		Matrix4f pro = new Matrix4f()
 				.scale(size)
-				.translate(size * 32 - 1 - (float) x / size, size * 18 - 1 - (float) y / size, 0);
+				.translate(size * (mainApp.getCurrentWidth() / 32) - 1 - (float) x / size, size * (mainApp.getCurrentHeight() / 32) - 1 - (float) y / size, 0);
 			
 		mainApp.getFont().getFont().bind();
 		fontShader.bind();
@@ -451,6 +458,12 @@ public class Game extends MainApplication
 	public static void main(String[] args)
 	{
 		new Game();
+	}
+	
+	@Override
+	protected boolean disableGlDepthTest()
+	{
+		return true;
 	}
 	
 }

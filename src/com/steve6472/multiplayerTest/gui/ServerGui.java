@@ -25,6 +25,7 @@ import com.steve6472.multiplayerTest.network.packets.server.SOpenInventory;
 import com.steve6472.multiplayerTest.network.packets.server.SRunEvent;
 import com.steve6472.multiplayerTest.server.tiles.ServerTile;
 import com.steve6472.multiplayerTest.structures.Structure;
+import com.steve6472.sge.gfx.Camera;
 import com.steve6472.sge.gfx.Helper;
 import com.steve6472.sge.gfx.Screen;
 import com.steve6472.sge.gfx.Shader;
@@ -35,7 +36,6 @@ import com.steve6472.sge.main.MainApplication;
 import com.steve6472.sge.main.Util;
 import com.steve6472.sge.main.callbacks.KeyCallback;
 import com.steve6472.sge.main.networking.packet.DataStream;
-import com.steve6472.sge.test.Camera;
 import com.steve6472.sge.main.game.world.Chunk;
 import com.steve6472.sge.main.game.world.World;
 
@@ -179,7 +179,7 @@ public class ServerGui extends Gui
 	public void guiTick()
 	{
 		server.tick();
-
+/*
 		int mouseX = getMainApp().getMouseX();
 		int mouseY = getMainApp().getMouseY();
 		
@@ -223,7 +223,7 @@ public class ServerGui extends Gui
 		{
 //			selectedTile = world0.getTileId(selectedIndex);
 			selectedTile = world0.getTileInWorld(selectedIndex, 0);
-		}
+		}*/
 		
 //		MultiplayerTest.camera.setLocation(players.get(0).getLocation().getIntX(), players.get(0).getLocation().getIntY());
 	}

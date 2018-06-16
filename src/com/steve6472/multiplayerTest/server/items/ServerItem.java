@@ -51,7 +51,7 @@ public abstract class ServerItem extends Item
 
 		atlas = new Atlas(sprites.toList());
 		atlas.create(32, (x, y, i) -> items.getObject(i).setIndexes(x, y, i));
-		GameTile.initGameTiles(getAtlas(), 32, 32, new Shader("shaders\\basev2"), 31, 17);
+		GameTile.initGameTiles(getAtlas(), 32, 32);
 		System.out.println("Items initialized");
 		atlas.getAtlas().save(new File("serverItems.png"));
 	}

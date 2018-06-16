@@ -18,7 +18,6 @@ import com.steve6472.multiplayerTest.network.packets.client.CConfirmChunk;
 import com.steve6472.multiplayerTest.network.packets.client.CMovePacket;
 import com.steve6472.multiplayerTest.network.packets.client.CPing;
 import com.steve6472.multiplayerTest.network.packets.client.CRequestInventory;
-import com.steve6472.multiplayerTest.network.packets.client.CRequestTile;
 import com.steve6472.multiplayerTest.network.packets.client.CRotate;
 import com.steve6472.multiplayerTest.network.packets.client.CSetName;
 import com.steve6472.multiplayerTest.network.packets.client.CUpdatePacket;
@@ -35,12 +34,10 @@ import com.steve6472.sge.main.game.world.World;
 public class ServerHandler implements IServerHandler
 {
 	private final Server server;
-//	private final ServerGui serverGui;
 
 	public ServerHandler(Server server, ServerGui serverGui)
 	{
 		this.server = server;
-//		this.serverGui = serverGui;
 	}
 
 	@Override
@@ -65,14 +62,6 @@ public class ServerHandler implements IServerHandler
 		player.setLocation(x, y);
 		player.updateBox();
 		server.sendPacketWithException(new STeleportPlayer(x, y, player.getNetworkId()), packet.getSender());
-	}
-
-	@Override
-	public void handleRequestTile(CRequestTile packet)
-	{
-		System.out.println("Client requested tile " + packet.getIndex());
-		System.err.println("Can not send tile due to client not providing world id");
-//		server.sendPacket(new SChangeTile(packet.getIndex(), serverGui.world0.getTileId(packet.getIndex())), packet.getSender());
 	}
 	
 	@Override
@@ -127,6 +116,8 @@ public class ServerHandler implements IServerHandler
 	public void handleRotation(CRotate packet)
 	{
 		PlayerMP player = server.getPlayer(packet.getSender());
+		if (player == null)
+			return;
 		player.setAngle(packet.getDegree());
 		server.sendPacketWithException(new SRotate(player.getNetworkId(), packet.getDegree()), packet.getSender());
 	}
@@ -171,7 +162,7 @@ public class ServerHandler implements IServerHandler
 		}
 	}
 	
-	private void printCantFindPlayerErrorMessage(DatagramPacket datagram)
+	public static void printCantFindPlayerErrorMessage(DatagramPacket datagram)
 	{
 		System.err.println("Can't find player from datagram: " + datagram.getAddress().getHostAddress() + ":" + datagram.getPort());
 	}

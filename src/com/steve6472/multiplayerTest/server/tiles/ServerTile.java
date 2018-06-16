@@ -10,14 +10,12 @@ package com.steve6472.multiplayerTest.server.tiles;
 import com.steve6472.multiplayerTest.Bullet;
 import com.steve6472.multiplayerTest.GameWorld;
 import com.steve6472.multiplayerTest.PlayerMP;
-import com.steve6472.sge.gfx.Shader;
 import com.steve6472.sge.main.SGArray;
 import com.steve6472.sge.main.game.Atlas;
 import com.steve6472.sge.main.game.world.GameTile;
 
 public abstract class ServerTile extends GameTile
 {
-
 	private final int id;
 	private final int light;
 	private final int mapColor;
@@ -117,7 +115,7 @@ public abstract class ServerTile extends GameTile
 		
 		atlas = new Atlas(sprites.toList());
 		atlas.create(32, (x, y, i) -> tiles.getObject(i).setIndexes(x, y, i));
-		GameTile.initGameTiles(getAtlas(), 32, 32, new Shader("shaders\\basev2"), 31, 17);
+		GameTile.initGameTiles(getAtlas(), 32, 32);
 		System.out.println("Tiles initialized");
 	}
 	

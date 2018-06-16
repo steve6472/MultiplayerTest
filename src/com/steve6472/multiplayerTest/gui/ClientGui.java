@@ -22,6 +22,7 @@ import com.steve6472.multiplayerTest.PlayerMP;
 import com.steve6472.multiplayerTest.animations.SwingAnimationV3;
 import com.steve6472.multiplayerTest.network.Client;
 import com.steve6472.multiplayerTest.network.packets.client.CSetName;
+import com.steve6472.multiplayerTest.network.packets.client.CSetRenderDistance;
 import com.steve6472.multiplayerTest.network.packets.server.world.SInitClientData;
 import com.steve6472.sge.gfx.Helper;
 import com.steve6472.sge.gfx.Screen;
@@ -42,6 +43,7 @@ import com.steve6472.sge.main.game.world.GameTile;
 import com.steve6472.sge.main.game.world.World;
 import com.steve6472.sge.main.networking.packet.ConnectPacket;
 import com.steve6472.sge.test.ShaderTest2;
+
 import com.steve6472.sge.gfx.Model;
 
 public class ClientGui extends Gui
@@ -81,8 +83,8 @@ public class ClientGui extends Gui
 		animations.put(id, animation);
 	}
 	
-	
 	public static String name = "";
+	public static int renderDistance = 5;
 
 	public ClientGui(MainApplication mainApp)
 	{
@@ -116,6 +118,7 @@ public class ClientGui extends Gui
 		client.start();
 		client.sendPacket(new ConnectPacket());
 		client.sendPacket(new CSetName(name));
+		client.sendPacket(new CSetRenderDistance(renderDistance));
 		
 		clientController = new ClientController(getMainApp(), client, this);
 		
@@ -162,6 +165,11 @@ public class ClientGui extends Gui
 		}
 		
 		bullets.tick(true);
+		
+		for (Bullet b : bullets.getAll())
+		{
+			b.tick(client, this);
+		}
 	}
 	
 	public static boolean update = false;
@@ -176,7 +184,7 @@ public class ClientGui extends Gui
 		
 		atlas = new Atlas(Game.tileSprite, data.atlasSize);
 		Game.tileModel = new Model(ShaderTest2.fillScreen(), ShaderTest2.createTexture(32, 32, atlas.getAtlas()), ShaderTest2.createArray(0));
-		GameTile.initGameTiles(atlas, 32, 32, new Shader("shaders\\basev2"), 31, 17);
+		GameTile.initGameTiles(atlas, 32, 32);
 		Chunk.initChunks(data.chunkWidth, data.chunkHeight, data.chunkLayers);
 		World.initWorlds(data.worldWidth, data.worldHeight);
 		
@@ -189,6 +197,8 @@ public class ClientGui extends Gui
 	{
 		return atlas;
 	}
+	
+	int d = 0;
 	
 	@Override
 	public void render(Screen screen)
@@ -258,7 +268,6 @@ public class ClientGui extends Gui
 			{
 				Helper.pushLayer();
 				
-
 				float rt = 30f / 32f;
 				Helper.translate(-rt, -rt, 0);
 				
@@ -289,17 +298,19 @@ public class ClientGui extends Gui
 		hotbar.render(0, getMainApp().getCurrentHeight() / -2f + 32f);
 		
 		Helper.pushLayer();
-		
+
+		Helper.translate(0, -getMainApp().getCurrentHeight() / 2 + 32, 0);
 		Helper.scale(32);
-		Helper.translate((clientController.getSlot() - 2) * -2, 4 * -2, 0);
+		Helper.translate((clientController.getSlot() - 2) * -2, 0, 0);
 		Game.drawSpriteFromAtlas(4f / 16f, 3f / 16f, Game.pixelModel32, Game.shader, Game.sprites);
 		
 		Helper.popLayer();
 		
 		Helper.pushLayer();
 		
+		Helper.translate(0, -getMainApp().getCurrentHeight() / 2 + 32, 0);
 		Helper.scale(16);
-		Helper.translate(-4 * -2, 8 * -2, 0);
+		Helper.translate(8, 0, 0);
 		Game.drawSpriteFromAtlas(11f / 16f, 1f / 16f, Game.pixelModel32, Game.shader, Game.sprites);
 		Helper.translate(-4, 0, 0);
 		Game.drawSpriteFromAtlas(11f / 16f, 2f / 16f, Game.pixelModel32, Game.shader, Game.sprites);
@@ -318,7 +329,7 @@ public class ClientGui extends Gui
 		Game.drawFont(mainApp, "Ping: " + clientController.getPing(), 5, 25);
 		if (world != null)
 		{
-			Game.drawFont(mainApp, "Rendered Tiles: " + world.renderedTiles, 5, 35);
+			Game.drawFont(mainApp, "Rendered Chunks: " + world.renderedChunks, 5, 35);
 			Game.drawFont(mainApp, "Particles: " + world.particles.getAll().size(), 5, 45);
 		}
 		Game.drawFont(mainApp, "X/Y: " + getX() + "/" + getY(), 5, 55);
@@ -335,28 +346,6 @@ public class ClientGui extends Gui
 			Game.drawSquare(0, mainApp.getCurrentHeight() - 10, 8 * 64 + 4, 10, 0x80000000);
 			Game.drawFont(mainApp, clientController.getChatFieldText(), 2, getMainApp().getCurrentHeight() - 9);
 		}
-		
-//		GameItem.renderItemInWorld(0, 0, 64, 0, GameItem.sword);
-		
-//		GameCamera camera = MultiplayerTest.camera;
-//
-//		Matrix4f pro = new Matrix4f()
-//				.translate(1f / (float) camera.getWidth() + camera.getWidth() / 2, 1f / (float) camera.getHeight() + camera.getHeight() / 2, 0)
-//				.scale(4);
-//		
-//		MultiplayerTest.sprites.bind();
-//		MultiplayerTest.shader.bind();
-//		MultiplayerTest.shader.setUniform1f("sampler", 0);
-//		
-//		float rads = (float) Math.toRadians(size += 2);
-//		float addSize = (float) Math.sin(rads) - (float) Math.cos(rads);
-//		
-//		Item.renderItem(0, 0, Item.greenFlower0, pro, 2.5f + addSize / 2f);
-		
-//		MultiplayerTest.drawSprite(0, 0, new Matrix4f().translate(0, 32, 0).scale(256, 512, 0).translate(1, 0, 0), MultiplayerTest.fullModel, MultiplayerTest.shader, MultiplayerTest.sprites);
-
-//		renderSpriteInWorld(16, 16, MultiplayerTest.sprites);
-	
 	}
 	
 	public static void renderSpriteInWorld(float x, float y, Sprite sprite)

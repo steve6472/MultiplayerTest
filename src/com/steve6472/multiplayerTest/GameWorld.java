@@ -15,6 +15,7 @@ import com.steve6472.multiplayerTest.network.packets.server.SSpawnParticle;
 import com.steve6472.multiplayerTest.network.packets.server.world.SChangeTile;
 import com.steve6472.multiplayerTest.server.tiles.ServerTile;
 import com.steve6472.multiplayerTest.server.tiles.tileData.TileData;
+import com.steve6472.sge.gfx.Camera;
 import com.steve6472.sge.gfx.Helper;
 import com.steve6472.sge.gfx.Model;
 import com.steve6472.sge.gfx.Shader;
@@ -24,7 +25,6 @@ import com.steve6472.sge.main.game.particle.Particle;
 import com.steve6472.sge.main.game.world.Chunk;
 import com.steve6472.sge.main.game.world.GameCamera;
 import com.steve6472.sge.main.game.world.World;
-import com.steve6472.sge.test.Camera;
 
 public class GameWorld extends World
 {
@@ -44,7 +44,7 @@ public class GameWorld extends World
 	}
 	
 	@Override
-	public void render(GameCamera camera)
+	public void render(Camera camera)
 	{
 		super.render(camera);
 		

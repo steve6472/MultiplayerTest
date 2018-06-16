@@ -15,7 +15,6 @@ import java.util.List;
 import com.steve6472.multiplayerTest.Game;
 import com.steve6472.multiplayerTest.GameInventory;
 import com.steve6472.multiplayerTest.GameItem;
-import com.steve6472.multiplayerTest.GameWorld;
 import com.steve6472.multiplayerTest.animations.SwingAnimationV3;
 import com.steve6472.multiplayerTest.network.Client;
 import com.steve6472.multiplayerTest.network.packets.client.CChangeSlot;
@@ -25,15 +24,14 @@ import com.steve6472.multiplayerTest.network.packets.client.CMovePacket;
 import com.steve6472.multiplayerTest.network.packets.client.CPing;
 import com.steve6472.multiplayerTest.network.packets.client.CRotate;
 import com.steve6472.multiplayerTest.network.packets.client.CUpdatePacket;
+import com.steve6472.sge.main.KeyList;
 import com.steve6472.sge.main.MainApplication;
 import com.steve6472.sge.main.callbacks.CharCallback;
 import com.steve6472.sge.main.callbacks.MouseButtonCallback;
 import com.steve6472.sge.main.game.Vec2;
 import com.steve6472.sge.main.game.inventory.Item;
-import com.steve6472.sge.main.game.world.Chunk;
-import com.steve6472.sge.main.game.world.World;
 
-public class ClientController
+public class ClientController implements KeyList
 {
 	public Vec2 loc, oldLoc, newLoc;
 	public List<String> chatText;
@@ -91,16 +89,18 @@ public class ClientController
 			double speed = 1;
 			
 			newLoc.setLocation(loc);
-			
+
+			if (mainApp.isKeyPressed(GLFW_KEY_LEFT_ALT))
+				speed = 0.1d;
 			if (mainApp.isKeyPressed(GLFW_KEY_LEFT_SHIFT))
 				speed = 4;
 			if (mainApp.isKeyPressed(GLFW_KEY_LEFT_CONTROL))
 				speed = 16;
 			
-			if (mainApp.getKeyHandler().isKeyPressed(GLFW_KEY_W))
+			if (mainApp.getKeyHandler().isKeyPressed(W))
 				newLoc.move2(newRotation, speed);
 
-			if (mainApp.getKeyHandler().isKeyPressed(GLFW_KEY_S))
+			if (mainApp.getKeyHandler().isKeyPressed(S))
 				newLoc.move2(newRotation + 180, speed);
 			
 			if (!inTile(newLoc))
@@ -148,35 +148,30 @@ public class ClientController
 		if (client.getWorld() == null)
 			return false;
 		
-		if (!isTileLocOutOfBounds(px00, py00, client.getWorld()))
-			if (clientGui.solidTiles[client.getWorld().getTileInWorld(px00, py00, 0)])
+		if (!Game.isTileLocOutOfBounds(px00, py00, client.getWorld()))
+			if (clientGui.solidTiles[client.getWorld().getTileInWorldSafe(px00, py00, 0)])
 				return true;
 
-		if (!isTileLocOutOfBounds(px01, py01, client.getWorld()))
-			if (clientGui.solidTiles[client.getWorld().getTileInWorld(px01, py01, 0)])
+		if (!Game.isTileLocOutOfBounds(px01, py01, client.getWorld()))
+			if (clientGui.solidTiles[client.getWorld().getTileInWorldSafe(px01, py01, 0)])
 				return true;
 
-		if (!isTileLocOutOfBounds(px10, py10, client.getWorld()))
-			if (clientGui.solidTiles[client.getWorld().getTileInWorld(px10, py10, 0)])
+		if (!Game.isTileLocOutOfBounds(px10, py10, client.getWorld()))
+			if (clientGui.solidTiles[client.getWorld().getTileInWorldSafe(px10, py10, 0)])
 				return true;
 
-		if (!isTileLocOutOfBounds(px11, py11, client.getWorld()))
-			if (clientGui.solidTiles[client.getWorld().getTileInWorld(px11, py11, 0)])
+		if (!Game.isTileLocOutOfBounds(px11, py11, client.getWorld()))
+			if (clientGui.solidTiles[client.getWorld().getTileInWorldSafe(px11, py11, 0)])
 				return true;
 		
 		return false;
-	}
-
-	public boolean isTileLocOutOfBounds(int x, int y, GameWorld world)
-	{
-		return (x < 0 || y < 0 || x >= (World.worldWidth * Chunk.chunkWidth) || y >= (World.worldHeight * Chunk.chunkHeight));
 	}
 
 	public void setupHandlers(MainApplication mainApp)
 	{
 		mainApp.getKeyHandler().addKeyCallback((key, scancode, action, mod) ->
 		{
-			if (key == GLFW_KEY_ENTER && action == GLFW_PRESS)
+			if (key == ENTER && action == GLFW_PRESS)
 			{
 				if (!openedChat)
 				{
@@ -194,44 +189,44 @@ public class ClientController
 			
 			if (!openedChat && action == GLFW_PRESS)
 			{
-				if (key == GLFW_KEY_1)
+				if (key == _1)
 				{
 					slot = 0;
 					client.sendPacket(new CChangeSlot(slot));
 				}
 
-				if (key == GLFW_KEY_2)
+				if (key == _2)
 				{
 					slot = 1;
 					client.sendPacket(new CChangeSlot(slot));
 				}
 
-				if (key == GLFW_KEY_3)
+				if (key == _3)
 				{
 					slot = 2;
 					client.sendPacket(new CChangeSlot(slot));
 				}
 
-				if (key == GLFW_KEY_4)
+				if (key == _4)
 				{
 					slot = 3;
 					client.sendPacket(new CChangeSlot(slot));
 				}
 
-				if (key == GLFW_KEY_5)
+				if (key == _5)
 				{
 					slot = 4;
 					client.sendPacket(new CChangeSlot(slot));
 				}
 			}
 			
-			if (!openedChat && key == GLFW_KEY_F && !swing && slot == 0)
+			if (!openedChat && key == F && !swing && slot == 0)
 			{
 				clientGui.runningAnimations.addObject(new SwingAnimationV3(GameItem.thinSword));
 				swing = true;
 			}
 			
-			if (openedChat && key == GLFW_KEY_BACKSPACE && (action == GLFW_PRESS || action == GLFW_REPEAT) && chatFieldText.length() >= 1)
+			if (openedChat && key == BACKSPACE && (action == GLFW_PRESS || action == GLFW_REPEAT) && chatFieldText.length() >= 1)
 			{
 				chatFieldText = chatFieldText.substring(0, chatFieldText.length() - 1);
 			}
@@ -255,12 +250,13 @@ public class ClientController
 			{
 				int tx = (x - mainApp.getCurrentWidth() / 2 + getLoc().getIntX() + 16) / 32;
 				int ty = (y - mainApp.getCurrentHeight() / 2 + getLoc().getIntY() + 16) / 32;
+				
 				if (action == GLFW_PRESS)
 				{
-					client.sendPacket(new CMouseButton(x, y, tx, ty, mainApp.getMouseHandler().getButton(), 0));
+					client.sendPacket(new CMouseButton(x, y, tx, ty, Game.camera.getWidth(), Game.camera.getHeight(), mainApp.getMouseHandler().getButton(), 0));
 				} else if (action == GLFW_RELEASE)
 				{
-					client.sendPacket(new CMouseButton(x, y, tx, ty, mainApp.getMouseHandler().getButton(), 1));
+					client.sendPacket(new CMouseButton(x, y, tx, ty, Game.camera.getWidth(), Game.camera.getHeight(), mainApp.getMouseHandler().getButton(), 1));
 				}
 			}
 		});
