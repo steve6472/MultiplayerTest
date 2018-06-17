@@ -87,7 +87,7 @@ public class PlayerMP extends BaseEntity
 		lastUpdate = System.currentTimeMillis();
 		this.setLocation(x, y);
 		
-		tickVCH = new SGArray<Integer>(0, true, true);
+		tickVCH = new SGArray<Integer>(0);
 		
 		GameInventory gi = new GameInventory(this, 5, 8, Item.AIR);
 		gi.getSlot(0).setItemId(27);

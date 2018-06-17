@@ -76,8 +76,8 @@ public class RenderTestGui extends Gui implements KeyList
 		sha = new Shader("shaders\\tess");
 		pix = new Sprite(new int[] {0xff000000}, 1, 1);
 		
-		points = new SGArray<Vec2>(0, false, false);
-		colors = new SGArray<float[]>(0, false, false);
+		points = new SGArray<Vec2>(0);
+		colors = new SGArray<float[]>(0);
 		rgb = new float[] {1, 1, 1};
 		
 		ver = new ArrayList<Float>();

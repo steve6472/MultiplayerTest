@@ -92,7 +92,7 @@ public class ClientGui extends Gui
 		switchRender();
 		
 		events = new HashMap<Integer, Event>();
-		runningAnimations = new SGArray<Animation>(0, true, true);
+		runningAnimations = new SGArray<Animation>(0);
 		
 		hotbar = new SmallNineSlice(97, 97, 30, 30, Game.sprites, new Shader("shaders\\basev2"), Game.camera);
 		hotbar.setCorner(0, 0, 7, 7);
@@ -140,7 +140,7 @@ public class ClientGui extends Gui
 		
 		clientController.tick(getMainApp(), newRotation);
 		
-		SGArray<Integer> removeAnimations = new SGArray<Integer>(0, true, true);
+		SGArray<Integer> removeAnimations = new SGArray<Integer>(0);
 		
 		for (int i = 0; i < runningAnimations.getSize(); i++)
 		{

@@ -34,7 +34,7 @@ public class SwingAnimation extends Animation
 	
 	public SwingAnimation()
 	{
-		points = new SGArray<Vec2>(0, true, true);
+		points = new SGArray<Vec2>(0);
 	}
 	
 	private void renderItem(GameItem item, float rot)

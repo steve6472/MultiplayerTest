@@ -19,8 +19,8 @@ public class GameChunk extends Chunk
 	
 	public GameChunk()
 	{
-		map = new SGArray<int[]>(layerCount, false, false);
-		tileData = new SGArray<TileData[]>(layerCount, false, false);
+		map = new SGArray<int[]>(layerCount);
+		tileData = new SGArray<TileData[]>(layerCount);
 		
 		for (int l = 0; l < layerCount; l++)
 		{
