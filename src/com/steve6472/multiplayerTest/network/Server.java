@@ -14,14 +14,13 @@ import java.util.List;
 
 import com.steve6472.multiplayerTest.Bullet;
 import com.steve6472.multiplayerTest.Game;
-import com.steve6472.multiplayerTest.GameWorld;
 import com.steve6472.multiplayerTest.PlayerMP;
 import com.steve6472.multiplayerTest.gui.ServerGui;
 import com.steve6472.multiplayerTest.network.handlers.ServerHandler;
 import com.steve6472.multiplayerTest.network.packets.CPacket;
 import com.steve6472.multiplayerTest.network.packets.server.*;
 import com.steve6472.multiplayerTest.network.packets.server.world.SInitClientData;
-import com.steve6472.multiplayerTest.server.events.BuildStructure;
+import com.steve6472.multiplayerTest.server.ServerWorld;
 import com.steve6472.multiplayerTest.server.tiles.ServerTile;
 import com.steve6472.sge.main.SGArray;
 import com.steve6472.sge.main.Util;
@@ -102,7 +101,7 @@ public class Server extends UDPServer
 		updateTime = System.currentTimeMillis() - tickStart;
 	}
 
-	public boolean isTileLocOutOfBounds(int x, int y, GameWorld world)
+	public boolean isTileLocOutOfBounds(int x, int y, ServerWorld world)
 	{
 		return (x < 0 || y < 0 || x >= (World.worldWidth * Chunk.chunkWidth) || y >= (World.worldHeight * Chunk.chunkHeight));
 	}
@@ -118,7 +117,6 @@ public class Server extends UDPServer
 		}
 
 		PlayerMP newPlayer = addNewPlayer(packet.getAddress(), packet.getPort(), Game.spawnX, Game.spawnY);
-		sendPacket(new SAddEvent(new BuildStructure()), packet);
 		sendPacket(new SSetNetworkId(newPlayer.getNetworkId()), packet);
 		sendPacket(new SInitClientData(World.worldWidth, World.worldHeight, Chunk.chunkWidth, Chunk.chunkHeight, Chunk.layerCount, ServerTile.getAtlas()), packet);
 		sendPacket(new SChat("Player has connected", -1));
@@ -239,17 +237,12 @@ public class Server extends UDPServer
 		return players;
 	}
 	
-	public void sendPacket(Packet<? extends IPacketHandler> packet, PlayerMP player)
-	{
-		sendPacket(packet, player.getIp(), player.getPort());
-	}
-	
 	public List<PlayerMP> getPlayers()
 	{
 		return sg.players;
 	}
 	
-	public GameWorld getWorld()
+	public ServerWorld getWorld()
 	{
 		return sg.world0;
 	}

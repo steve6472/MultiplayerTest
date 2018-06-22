@@ -17,10 +17,11 @@ import com.steve6472.multiplayerTest.Bullet;
 import com.steve6472.multiplayerTest.Event;
 import com.steve6472.multiplayerTest.Game;
 import com.steve6472.multiplayerTest.GameItem;
-import com.steve6472.multiplayerTest.GameWorld;
 import com.steve6472.multiplayerTest.PlayerMP;
 import com.steve6472.multiplayerTest.animations.SwingAnimationV3;
+import com.steve6472.multiplayerTest.client.ClientWorld;
 import com.steve6472.multiplayerTest.network.Client;
+import com.steve6472.multiplayerTest.network.packets.client.CAllowPackets;
 import com.steve6472.multiplayerTest.network.packets.client.CSetName;
 import com.steve6472.multiplayerTest.network.packets.client.CSetRenderDistance;
 import com.steve6472.multiplayerTest.network.packets.server.world.SInitClientData;
@@ -53,7 +54,7 @@ public class ClientGui extends Gui
 	public Client client;
 	public List<PlayerMP> players;
 	public IObjectManipulator<Bullet> bullets;
-	public GameWorld world;
+	public ClientWorld world;
 	public int score;
 	public Map<Integer, Event> events;
 	public Map<Integer, Animation> animations;
@@ -103,9 +104,9 @@ public class ClientGui extends Gui
 		hotbar.setScaleMultiplier(2f, 2f);
 	}
 	
-	public GameWorld generateWorld(int worldId)
+	public ClientWorld generateWorld(int worldId)
 	{
-		return new GameWorld(worldId, null, getMainApp());
+		return new ClientWorld(worldId);
 	}
 
 	@Override
@@ -191,6 +192,8 @@ public class ClientGui extends Gui
 		solidTiles = data.solid;
 		
 		world = generateWorld(0);
+		
+		client.sendPacket(new CAllowPackets());
 	}
 	
 	public static Atlas getAtlas()
@@ -330,7 +333,7 @@ public class ClientGui extends Gui
 		if (world != null)
 		{
 			Game.drawFont(mainApp, "Rendered Chunks: " + world.renderedChunks, 5, 35);
-			Game.drawFont(mainApp, "Particles: " + world.particles.getAll().size(), 5, 45);
+			Game.drawFont(mainApp, "Particles: " + world.particles.getSize(), 5, 45);
 		}
 		Game.drawFont(mainApp, "X/Y: " + getX() + "/" + getY(), 5, 55);
 		
@@ -360,7 +363,7 @@ public class ClientGui extends Gui
 		Helper.popLayer();
 	}
 	
-	public GameWorld getWorld()
+	public ClientWorld getWorld()
 	{
 		return world;
 	}

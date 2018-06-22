@@ -7,8 +7,8 @@
 
 package com.steve6472.multiplayerTest.server.items;
 
-import com.steve6472.multiplayerTest.GameWorld;
 import com.steve6472.multiplayerTest.PlayerMP;
+import com.steve6472.multiplayerTest.server.ServerWorld;
 import com.steve6472.multiplayerTest.server.tiles.ServerTile;
 
 public class PlaceableItem extends BaseItem
@@ -30,7 +30,7 @@ public class PlaceableItem extends BaseItem
 	}
 	
 	@Override
-	public void mouseEvent(int x, int y, int tx, int ty, PlayerMP player, int action, int button, GameWorld world, int slot)
+	public void mouseEvent(int x, int y, int tx, int ty, PlayerMP player, int action, int button, ServerWorld world, int slot)
 	{
 		//Remove one item from slot
 //		Inventory inv = player.getInventory();

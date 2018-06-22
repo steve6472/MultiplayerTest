@@ -7,7 +7,7 @@
 
 package com.steve6472.multiplayerTest.structures;
 
-import com.steve6472.multiplayerTest.GameWorld;
+import com.steve6472.multiplayerTest.server.ServerWorld;
 
 public abstract class Structure
 {
@@ -16,7 +16,7 @@ public abstract class Structure
 	public abstract int getStructureWidth();
 	public abstract int getStructureHeight();
 	
-	public void generateStructure(int x, int y, GameWorld world)
+	public void generateStructure(int x, int y, ServerWorld world)
 	{
 		for (int i = 0; i < getStructureWidth(); i++)
 		{
@@ -27,7 +27,7 @@ public abstract class Structure
 		}
 	}
 	
-	private void setTile(int x, int y, int id, GameWorld world)
+	private void setTile(int x, int y, int id, ServerWorld world)
 	{
 //		if (x < 0 || y < 0 || x >= World.worldWidth * Chunk.chunkWidth || y >= World.worldHeight * Chunk.chunkHeight)
 //			return;

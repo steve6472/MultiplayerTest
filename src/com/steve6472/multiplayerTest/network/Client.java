@@ -11,8 +11,8 @@ import java.net.DatagramPacket;
 import java.util.Iterator;
 
 import com.steve6472.multiplayerTest.Bullet;
-import com.steve6472.multiplayerTest.GameWorld;
 import com.steve6472.multiplayerTest.PlayerMP;
+import com.steve6472.multiplayerTest.client.ClientWorld;
 import com.steve6472.multiplayerTest.gui.ClientGui;
 import com.steve6472.multiplayerTest.network.handlers.ClientHandler;
 import com.steve6472.multiplayerTest.network.packets.SPacket;
@@ -87,7 +87,7 @@ public class Client extends UDPClient
 		return null;
 	}
 	
-	public GameWorld getWorld()
+	public ClientWorld getWorld()
 	{
 		return cg.world;
 	}

@@ -1,46 +1,37 @@
 /**********************
 * Created by steve6472 (Mirek Jozefek)
-* On date: 29. 4. 2018
+* On date: 21. 6. 2018
 * Project: MultiplayerTest
 *
 ***********************/
 
-package com.steve6472.multiplayerTest;
+package com.steve6472.multiplayerTest.client;
 
 import org.joml.Matrix4f;
 
+import com.steve6472.multiplayerTest.Game;
+import com.steve6472.multiplayerTest.IParticle;
 import com.steve6472.multiplayerTest.gui.ClientGui;
-import com.steve6472.multiplayerTest.network.Server;
-import com.steve6472.multiplayerTest.network.packets.server.SSpawnParticle;
-import com.steve6472.multiplayerTest.network.packets.server.world.SChangeTile;
+import com.steve6472.multiplayerTest.server.ServerWorld;
 import com.steve6472.multiplayerTest.server.tiles.ServerTile;
-import com.steve6472.multiplayerTest.server.tiles.tileData.TileData;
 import com.steve6472.sge.gfx.Camera;
 import com.steve6472.sge.gfx.Helper;
 import com.steve6472.sge.gfx.Model;
 import com.steve6472.sge.gfx.Shader;
-import com.steve6472.sge.main.MainApplication;
-import com.steve6472.sge.main.game.IObjectManipulator;
-import com.steve6472.sge.main.game.particle.Particle;
-import com.steve6472.sge.main.game.world.Chunk;
+import com.steve6472.sge.main.SGArray;
 import com.steve6472.sge.main.game.world.GameCamera;
 import com.steve6472.sge.main.game.world.World;
 
-public class GameWorld extends World
+public class ClientWorld extends World
 {
 	private final int worldId;
-	protected final Server server;
-	MainApplication mainApp;
-	public IObjectManipulator<Particle> particles;
-
-	public GameWorld(int worldId, Server server, /*GameCamera camera, */MainApplication mainApp)
+	public SGArray<IParticle> particles;
+	
+	public ClientWorld(int worldId)
 	{
-		createBlankChunks(GameChunk.class);
-		this.server = server;
-		this.mainApp = mainApp;
 		this.worldId = worldId;
-//		this.camera = camera;
-		particles = new IObjectManipulator<Particle>();
+		
+		particles = new SGArray<IParticle>();
 	}
 	
 	@Override
@@ -48,110 +39,55 @@ public class GameWorld extends World
 	{
 		super.render(camera);
 		
-		if (server != null)
-			ServerTile.getAtlas().getAtlas().bind();
-		else
-			ClientGui.getAtlas();
+		ClientGui.getAtlas().getAtlas().bind();
 		Game.shader.bind();
 		Game.shader.setUniform1f("sampler", 0);
-		
-		particles.render(null);
 		
 //		Game.tileShade.bind();
 //		Game.tileShade.setUniform1f("sampler", 0);
 //		Game.tileShade.setUniform4f("col", 0.0f, 0.0f, 0.0f, 0.5f);
 //		iterateVisibleTiles(camera, (x, y, l, id) -> ShadeRenderer.renderShade(this, camera, x, y, l, id));
+		
+		Game.particleShaderList.get(0).bind();
+		
+		if (ClientGui.atlas != null)
+			ClientGui.atlas.getAtlas().bind();
+		
+		for (IParticle p : particles)
+		{
+			p.render();
+		}
 	}
 	
 	public void tick()
 	{
-		particles.tick(true);
+		SGArray<Integer> dead = new SGArray<Integer>();
+		
+		for (IParticle p : particles)
+		{
+			p.tick();
+			if (p.isDead())
+				dead.add(particles.getIterIndex());
+		}
+		
+		dead.reverseArray();
+		
+		for (int i : dead)
+		{
+			particles.remove(i);
+		}
 	}
-	
+
 	public int getWorldId()
 	{
 		return worldId;
 	}
-	
-	public void setTileInWorld(int index, int layer, int id, boolean notifyClients)
-	{
-		super.setTileInWorldSafe(index, layer, id);
-		
-		int x = index % (Chunk.chunkWidth * World.worldWidth);
-		int y = index / (Chunk.chunkHeight * World.worldHeight);
-		
-		int cx = x / Chunk.chunkWidth;
-		int cy = y / Chunk.chunkHeight;
-		
-		if (notifyClients)
-		{
-			notifyClients(cx, cy, index, id);
-		}
-	}
-	
-	public void setTileInWorld(int x, int y, int layer, int id, boolean notifyClients)
-	{
-		super.setTileInWorldSafe(x, y, layer, id);
-		
-		int index = x + y * (World.worldWidth * Chunk.chunkWidth);
-		
-		int cx = x / Chunk.chunkWidth;
-		int cy = y / Chunk.chunkHeight;
-		
-		if (notifyClients)
-		{
-			notifyClients(cx, cy, index, id);
-		}
-	}
-	
-	public TileData getTileData(int x, int y, int layer)
-	{
-		int cx = x / Chunk.chunkWidth;
-		int cy = y / Chunk.chunkHeight;
-		if (cx < 0 || cy < 0 || cx > worldWidth || cy > worldHeight)
-			return null;
-		GameChunk c = (GameChunk) getChunk(cx, cy);
-		if (c != null)
-		{
-			return c.getTileData(x - cx * Chunk.chunkWidth, y - cy * Chunk.chunkHeight, layer);
-		} else
-		{
-			System.out.println("Chunk is null");
-			return null;
-		}
-	}
-	
-	public void notifyClients(int cx, int cy, int index, int id)
-	{
-		if (server != null)
-		{
-			for (PlayerMP p : server.getPlayers())
-			{
-				if (p.visitedChunks[cx + cy * World.worldWidth] == -1)
-				{
-					server.sendPacket(new SChangeTile(index, id, getWorldId()), p);
-				}
-			}
-		}
-	}
-	
-	public void createTileBreakParticles(int tx, int ty, int id)
-	{
-		for (PlayerMP pp : server.getPlayersInRange(tx, ty, 32))
-			server.sendPacket(new SSpawnParticle(tx * 32 + 16, ty * 32 + 16, id, 32, 0), pp);
-	}
-	
-	public void createTileHitParticles(int tx, int ty, int bx, int by, int id)
-	{
-		for (PlayerMP pp : server.getPlayersInRange(tx, ty, 32))
-			server.sendPacket(new SSpawnParticle(bx, by, id, 4, 0), pp);
-	}
-}
 
+}
 
 class ShadeRenderer
 {
-	public static void renderShade(GameWorld world, GameCamera camera, int i, int j, int l, int id)
+	public static void renderShade(ServerWorld world, GameCamera camera, int i, int j, int l, int id)
 	{
 		boolean t00 = ServerTile.getTile(world.getTileInWorldSafe(i - 1, j - 1 ,0)).castShadow();
 		boolean t10 = ServerTile.getTile(world.getTileInWorldSafe(i, j - 1	 ,0)).castShadow();

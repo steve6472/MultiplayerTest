@@ -11,6 +11,7 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 
 import com.steve6472.multiplayerTest.Game;
+import com.steve6472.multiplayerTest.ParticleType;
 import com.steve6472.multiplayerTest.server.items.ServerItem;
 import com.steve6472.multiplayerTest.server.tiles.ServerTile;
 import com.steve6472.sge.gfx.Screen;
@@ -82,8 +83,8 @@ public class MenuGui extends Gui
 				ServerTile.initTiles();
 				ServerItem.initItems();
 //				GameTile.initGameTiles(Tile.atlas, 32, 32, new Shader("shaders\\basev2"), 31, 17);
-				Chunk.initChunks(8, 8, 1);
-				World.initWorlds(64, 64);
+				Chunk.initChunks(Game.SERVER_CHUNK_SIZE, Game.SERVER_CHUNK_SIZE, 1);
+				World.initWorlds(Game.SERVER_WORLD_SIZE, Game.SERVER_WORLD_SIZE);
 				((Game) getMainApp()).serverGui.showGui();
 				hideGui();
 				getMainApp().resetOrtho();

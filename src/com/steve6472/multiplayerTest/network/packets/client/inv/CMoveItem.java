@@ -7,11 +7,11 @@
 
 package com.steve6472.multiplayerTest.network.packets.client.inv;
 
-import com.steve6472.multiplayerTest.GameWorld;
 import com.steve6472.multiplayerTest.PlayerMP;
 import com.steve6472.multiplayerTest.gui.ServerGui;
 import com.steve6472.multiplayerTest.network.Server;
 import com.steve6472.multiplayerTest.network.packets.CPacket;
+import com.steve6472.multiplayerTest.server.ServerWorld;
 import com.steve6472.multiplayerTest.server.tiles.BaseTile;
 import com.steve6472.multiplayerTest.server.tiles.ServerTile;
 import com.steve6472.multiplayerTest.server.tiles.tileData.TileData;
@@ -43,7 +43,7 @@ public class CMoveItem extends CPacket
 	@Override
 	public void handlePacket(Server server, ServerGui serverGui)
 	{
-		GameWorld world = serverGui.world0;
+		ServerWorld world = serverGui.world0;
 		PlayerMP player = server.getPlayer(getSender());
 		ServerTile tile = ServerTile.getTile(world.getTileInWorld(player.inventoryTileX, player.inventoryTileY, player.inventoryTileL));
 		

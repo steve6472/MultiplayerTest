@@ -5,8 +5,9 @@
 *
 ***********************/
 
-package com.steve6472.multiplayerTest;
+package com.steve6472.multiplayerTest.server;
 
+import com.steve6472.multiplayerTest.GameSlot;
 import com.steve6472.sge.main.game.BaseEntity;
 import com.steve6472.sge.main.game.inventory.Inventory;
 import com.steve6472.sge.main.game.inventory.Item;

@@ -10,9 +10,9 @@ package com.steve6472.multiplayerTest.gui;
 import org.lwjgl.glfw.GLFW;
 
 import com.steve6472.multiplayerTest.Game;
-import com.steve6472.multiplayerTest.GameInventory;
 import com.steve6472.multiplayerTest.GameSlot;
 import com.steve6472.multiplayerTest.network.packets.client.inv.CMoveItem;
+import com.steve6472.multiplayerTest.server.GameInventory;
 import com.steve6472.sge.gfx.Helper;
 import com.steve6472.sge.gfx.Shader;
 import com.steve6472.sge.gfx.SmallNineSlice;

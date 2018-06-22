@@ -59,8 +59,12 @@ public class SSetChunk extends SPacket
 //			client.sendPacket(new CConfirmChunk(packet.getChunkX(), packet.getChunkY()));
 		} else
 		{
-			Chunk c = new Chunk();
+			if (clientGui.world == null)
+				return;
+			
+			Chunk c = new Chunk(clientGui.world);
 			c.setTiles(getTiles(), 0);
+			
 			clientGui.world.setChunk(getChunkX(), getChunkY(), c);
 
 			client.sendPacket(new CConfirmChunk(getChunkX(), getChunkY()));

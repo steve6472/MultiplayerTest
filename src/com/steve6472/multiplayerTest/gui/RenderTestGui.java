@@ -141,7 +141,7 @@ public class RenderTestGui extends Gui implements KeyList
 						for (int i = 0; i < ver.size(); i++)
 							v[i] = ver.get(i);
 						
-						model.changeData(v, t, c);
+//						model.changeData(v, t, c);
 					}
 					
 					if (key == L)
@@ -169,7 +169,7 @@ public class RenderTestGui extends Gui implements KeyList
 						t[i * 8 + 6] = 0f;
 						t[i * 8 + 7] = 0f;
 
-						model.changeData(v, t, c);
+//						model.changeData(v, t, c);
 					}
 					
 					if (key == K)

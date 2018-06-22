@@ -8,8 +8,9 @@
 package com.steve6472.multiplayerTest.server.tiles;
 
 import com.steve6472.multiplayerTest.Bullet;
-import com.steve6472.multiplayerTest.GameWorld;
 import com.steve6472.multiplayerTest.PlayerMP;
+import com.steve6472.multiplayerTest.server.ServerWorld;
+import com.steve6472.multiplayerTest.server.tiles.tileData.ParticleBlock;
 import com.steve6472.sge.main.SGArray;
 import com.steve6472.sge.main.game.Atlas;
 import com.steve6472.sge.main.game.world.GameTile;
@@ -74,6 +75,7 @@ public abstract class ServerTile extends GameTile
 	
 	public static ServerTile rainbow;
 	public static ServerTile chest;
+	public static ServerTile particleTest;
 	
 	public static void initTiles()
 	{
@@ -112,17 +114,22 @@ public abstract class ServerTile extends GameTile
 		rainbow 				= new BaseTile(29, "rainbow.png", true, true, 15, 0xff61f7ff).createHitParticles().init();
 		
 		chest 					= new Chest(30, "chest.png").init();
-		
+		particleTest			= new BaseTile(31, "grass.png", false, false, 0, 0xff54ddff).setTileDataController(new ParticleBlock()).init();
+
+		System.out.println(sprites.toList().size() + " " + tiles.getSize());
 		atlas = new Atlas(sprites.toList());
-		atlas.create(32, (x, y, i) -> tiles.getObject(i).setIndexes(x, y, i));
+		atlas.create(32, (x, y, i) ->
+		
+			tiles.get(i).setIndexes(x, y, i)
+		);
 		GameTile.initGameTiles(getAtlas(), 32, 32);
 		System.out.println("Tiles initialized");
 	}
 	
 	public ServerTile init()
 	{
-		sprites.addObject(sprite);
-		tiles.addObject(this);
+		sprites.add(sprite);
+		tiles.add(this);
 		return this;
 	}
 	
@@ -182,11 +189,11 @@ public abstract class ServerTile extends GameTile
 		return atlas;
 	}
 	
-	public abstract void mouseEvent(int tx, int ty, PlayerMP player, int action, int button, GameWorld world);
+	public abstract void mouseEvent(int tx, int ty, PlayerMP player, int action, int button, ServerWorld world);
 	
-	public abstract void enteredTile(int tx, int ty, PlayerMP player, GameWorld world);
+	public abstract void enteredTile(int tx, int ty, PlayerMP player, ServerWorld world);
 	
-	public abstract void leftTile(int tx, int ty, PlayerMP player, GameWorld world);
+	public abstract void leftTile(int tx, int ty, PlayerMP player, ServerWorld world);
 	
-	public abstract void bulletCollision(int tx, int ty, Bullet bullet, GameWorld world);
+	public abstract void bulletCollision(int tx, int ty, Bullet bullet, ServerWorld world);
 }

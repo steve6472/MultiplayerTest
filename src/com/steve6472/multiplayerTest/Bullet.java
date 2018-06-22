@@ -101,7 +101,7 @@ public class Bullet extends BaseEntity
 		int bulletTileX = getLocation().getIntX() / 32;
 		int bulletTileY = getLocation().getIntY() / 32;
 
-		if (Game.isTileLocOutOfBounds(bulletTileX, bulletTileY, client.getWorld()))
+		if (Game.isTileLocOutOfBounds(bulletTileX, bulletTileY))
 		{
 			setDead();
 			return;

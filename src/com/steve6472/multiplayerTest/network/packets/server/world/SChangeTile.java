@@ -63,7 +63,7 @@ public class SChangeTile extends SPacket
 	@Override
 	public void handlePacket(Client client, ClientGui clientGui)
 	{
-		clientGui.world.setTileInWorld(getIndex(), 0, getId(), false);
+		clientGui.world.setTileInWorld(getIndex(), 0, getId());
 	}
 
 }

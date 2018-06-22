@@ -5,26 +5,26 @@
 *
 ***********************/
 
-package com.steve6472.multiplayerTest;
+package com.steve6472.multiplayerTest.server;
 
 import com.steve6472.multiplayerTest.server.tiles.BaseTile;
 import com.steve6472.multiplayerTest.server.tiles.ServerTile;
 import com.steve6472.multiplayerTest.server.tiles.tileData.TileData;
 import com.steve6472.sge.main.SGArray;
 import com.steve6472.sge.main.game.world.Chunk;
+import com.steve6472.sge.main.game.world.World;
 
-public class GameChunk extends Chunk
+public class ServerChunk extends Chunk
 {
 	private SGArray<TileData[]> tileData;
 	
-	public GameChunk()
+	public ServerChunk(World world)
 	{
-		map = new SGArray<int[]>(layerCount);
+		super(world);
 		tileData = new SGArray<TileData[]>(layerCount);
 		
 		for (int l = 0; l < layerCount; l++)
 		{
-			map.setObject(l, new int[chunkWidth * chunkHeight]);
 			tileData.setObject(l, new TileData[chunkWidth * chunkHeight]);
 		}
 	}
@@ -37,12 +37,13 @@ public class GameChunk extends Chunk
 			ServerTile tile = ServerTile.getTile(id);
 			if (tile instanceof BaseTile)
 			{
-				if (id == 30)
-				System.out.println("Setting " + id + " at " + x + "/" + y + " l:" + layer);
+				if (id == 30 || id == ServerTile.particleTest.getId())
+					System.out.println("Setting " + id + " at " + x + "/" + y + " l:" + layer);
+				
 				if (((BaseTile) tile).hasTileData())
 				{
 					setTileData(x, y, layer, ((BaseTile) tile).getTileDataController().generateTileData());
-					System.out.println("Created Tile Data");
+					System.out.println("Created Tile Data for " + tile.getClass().getSimpleName() + " at " + x + "/" + y);
 				}
 			} else
 			{
@@ -75,6 +76,15 @@ public class GameChunk extends Chunk
 
 	public void setTileData(int x, int y, int layer, TileData data)
 	{
-		tileData.getObject(layer)[x + y * chunkWidth] = data;
+		if (data == null)
+		{
+			ServerWorld gw = (ServerWorld) world;
+			gw.tileDataLocations.remove(Integer.valueOf(x + y * World.worldWidth));
+		} else
+		{
+			ServerWorld gw = (ServerWorld) world;
+			gw.tileDataLocations.add(Integer.valueOf(x + y * World.worldWidth));
+		}
+		tileData.get(layer)[x + y * chunkWidth] = data;
 	}
 }

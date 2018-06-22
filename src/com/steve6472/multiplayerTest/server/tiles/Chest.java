@@ -7,9 +7,9 @@
 
 package com.steve6472.multiplayerTest.server.tiles;
 
-import com.steve6472.multiplayerTest.GameWorld;
 import com.steve6472.multiplayerTest.PlayerMP;
 import com.steve6472.multiplayerTest.network.packets.server.SOpenInventory;
+import com.steve6472.multiplayerTest.server.ServerWorld;
 import com.steve6472.multiplayerTest.server.tiles.tileData.ChestController;
 import com.steve6472.multiplayerTest.server.tiles.tileData.TileData;
 
@@ -23,7 +23,7 @@ public class Chest extends BaseTile
 	}
 
 	@Override
-	public void mouseEvent(int tx, int ty, PlayerMP player, int action, int button, GameWorld world)
+	public void mouseEvent(int tx, int ty, PlayerMP player, int action, int button, ServerWorld world)
 	{
 		if (action == 0 && button == 2)
 		{

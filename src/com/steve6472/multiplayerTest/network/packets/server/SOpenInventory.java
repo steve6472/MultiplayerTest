@@ -8,10 +8,10 @@
 package com.steve6472.multiplayerTest.network.packets.server;
 
 import com.steve6472.multiplayerTest.Game;
-import com.steve6472.multiplayerTest.GameInventory;
 import com.steve6472.multiplayerTest.gui.ClientGui;
 import com.steve6472.multiplayerTest.network.Client;
 import com.steve6472.multiplayerTest.network.packets.SPacket;
+import com.steve6472.multiplayerTest.server.GameInventory;
 import com.steve6472.sge.main.game.inventory.Item;
 import com.steve6472.sge.main.networking.packet.DataStream;
 

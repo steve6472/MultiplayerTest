@@ -7,11 +7,11 @@
 
 package com.steve6472.multiplayerTest.network.packets.server;
 
-import com.steve6472.multiplayerTest.GameParticle;
-import com.steve6472.multiplayerTest.GameWorld;
 import com.steve6472.multiplayerTest.gui.ClientGui;
 import com.steve6472.multiplayerTest.network.Client;
 import com.steve6472.multiplayerTest.network.packets.SPacket;
+import com.steve6472.multiplayerTest.particles.TileCrackParticle;
+import com.steve6472.multiplayerTest.server.ServerWorld;
 import com.steve6472.sge.main.Util;
 import com.steve6472.sge.main.networking.packet.DataStream;
 
@@ -35,7 +35,7 @@ public class SSpawnParticle extends SPacket
 		seed = Util.getRandomLong(Long.MAX_VALUE - count, Long.MIN_VALUE);
 	}
 	
-	public SSpawnParticle(int x, int y, int hitId, int count, GameWorld world)
+	public SSpawnParticle(int x, int y, int hitId, int count, ServerWorld world)
 	{
 		this(x, y, hitId, count, world.getWorldId());
 	}
@@ -104,17 +104,27 @@ public class SSpawnParticle extends SPacket
 		for (int i = 0; i < getCount(); i++)
 		{
 			double ang = Util.getRandomDouble(360, 0, Util.getRandomLong(i, Long.MIN_VALUE, getSeed()));
-			GameParticle particle = new GameParticle(
-					getX(), 
-					getY(),
+//			GameParticle particle = new GameParticle(
+//					getX(), 
+//					getY(),
+//					ang,
+//					Util.getRandomInt(20, 10, Util.getRandomLong(i, Long.MIN_VALUE, getSeed())),
+//					getHitId(),
+//					0,
+//					1,
+//					getSeed());
+//			particle.rotation = (float) ang + Util.getRandomFloat(30, -30);
+//			particle.bigData.setDouble(0, Util.getRandomDouble(1.48d + 0.5d, 1.48d - 0.5d));
+			TileCrackParticle particle = new TileCrackParticle(
+					x,
+					y,
 					ang,
-					Util.getRandomInt(20, 10, Util.getRandomLong(i, Long.MIN_VALUE, getSeed())),
-					getHitId(),
-					0,
-					1,
-					getSeed());
-			particle.rotation = (float) ang + Util.getRandomFloat(30, -30);
-			particle.bigData.setDouble(0, Util.getRandomDouble(1.48d + 0.5d, 1.48d - 0.5d));
+//					Util.getRandomInt(20, 10, Util.getRandomLong(i, Long.MIN_VALUE, seed)),
+					Util.getRandomInt(20, 10, seed),
+					hitId % ClientGui.atlas.getSize(),
+					hitId / ClientGui.atlas.getSize(),
+					Util.getRandomDouble(1.48d + 0.5d, 1.48d - 0.5d),
+					(float) ang + Util.getRandomFloat(30, -30));
 			clientGui.world.particles.add(particle);
 		}
 	}

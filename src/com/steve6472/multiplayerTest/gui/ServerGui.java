@@ -17,12 +17,12 @@ import org.joml.Matrix4f;
 import org.lwjgl.glfw.GLFW;
 
 import com.steve6472.multiplayerTest.Game;
-import com.steve6472.multiplayerTest.GameChunk;
-import com.steve6472.multiplayerTest.GameWorld;
 import com.steve6472.multiplayerTest.PlayerMP;
 import com.steve6472.multiplayerTest.network.Server;
 import com.steve6472.multiplayerTest.network.packets.server.SOpenInventory;
 import com.steve6472.multiplayerTest.network.packets.server.SRunEvent;
+import com.steve6472.multiplayerTest.server.ServerChunk;
+import com.steve6472.multiplayerTest.server.ServerWorld;
 import com.steve6472.multiplayerTest.server.tiles.ServerTile;
 import com.steve6472.multiplayerTest.structures.Structure;
 import com.steve6472.sge.gfx.Camera;
@@ -53,7 +53,7 @@ public class ServerGui extends Gui
 	Server server;
 	public ItemList playerList;
 	public List<PlayerMP> players;
-	public GameWorld world0;
+	public ServerWorld world0;
 	
 	Sprite worldMap;
 	
@@ -106,12 +106,11 @@ public class ServerGui extends Gui
 					
 					for (PlayerMP p : players)
 					{
-						server.sendPacket(new SRunEvent(0, new DataStream()
+						p.sendPacket(new SRunEvent(0, new DataStream()
 								.writeInt(x)
 								.writeInt(y)
 								.writeInt(structureId)
-								.writeInt(worldId)), 
-								p);
+								.writeInt(worldId)));
 					}
 					Game.structures[structureId].generateStructure(x, y, world0);
 				}
@@ -125,11 +124,10 @@ public class ServerGui extends Gui
 		});
 	}
 	
-	public GameWorld generateWorld(int worldId, int structureCount)
+	public ServerWorld generateWorld(int worldId, int structureCount)
 	{
-//		World world = new World(32 * 8, 18 * 8, worldId, server, MultiplayerTest.camera, getMainApp());
-		GameWorld world = new GameWorld(worldId, server, getMainApp());
-		world.createBlankChunks(GameChunk.class);
+		ServerWorld world = new ServerWorld(worldId, server, getMainApp());
+		world.createBlankChunks(ServerChunk.class);
 		
 		for (int i = 0; i < World.worldWidth * Chunk.chunkWidth; i++)
 		{
@@ -139,7 +137,7 @@ public class ServerGui extends Gui
 				world.setTileInWorld(i, j, 0, ServerTile.grass.getId(), false);
 			}
 		}
-
+		
 		for (int i = 0; i < structureCount; i++)
 		{
 			int x = Util.getRandomInt(World.worldWidth * Chunk.chunkWidth, 0);
@@ -148,11 +146,11 @@ public class ServerGui extends Gui
 			Structure str = Game.structures[Util.getRandomInt(Game.structures.length - 1, 0)];
 			str.generateStructure(Util.getNumberBetween(0, World.worldWidth * Chunk.chunkWidth - str.getStructureWidth(), x),
 					Util.getNumberBetween(0, World.worldHeight * Chunk.chunkHeight - str.getStructureHeight(), y), world);
-//			str.generateStructure(x, y, world);
 		}
 		
 		world.setTileInWorld(0, 0, ServerTile.rainbow.getId(), false);
 		world.setTileInWorld(1, 0, ServerTile.chest.getId(), false);
+		world.setTileInWorld(2, 0, ServerTile.particleTest.getId(), false);
 		
 		return world;
 	}
@@ -179,6 +177,7 @@ public class ServerGui extends Gui
 	public void guiTick()
 	{
 		server.tick();
+		world0.tick();
 /*
 		int mouseX = getMainApp().getMouseX();
 		int mouseY = getMainApp().getMouseY();

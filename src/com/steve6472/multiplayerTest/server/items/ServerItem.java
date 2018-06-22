@@ -9,10 +9,9 @@ package com.steve6472.multiplayerTest.server.items;
 
 import java.io.File;
 
-import com.steve6472.multiplayerTest.GameWorld;
 import com.steve6472.multiplayerTest.PlayerMP;
+import com.steve6472.multiplayerTest.server.ServerWorld;
 import com.steve6472.multiplayerTest.server.tiles.ServerTile;
-import com.steve6472.sge.gfx.Shader;
 import com.steve6472.sge.main.SGArray;
 import com.steve6472.sge.main.game.Atlas;
 import com.steve6472.sge.main.game.inventory.Item;
@@ -104,5 +103,5 @@ public abstract class ServerItem extends Item
 		return items;
 	}
 	
-	public abstract void mouseEvent(int x, int y, int tx, int ty, PlayerMP player, int action, int button, GameWorld world, int slot);
+	public abstract void mouseEvent(int x, int y, int tx, int ty, PlayerMP player, int action, int button, ServerWorld world, int slot);
 }

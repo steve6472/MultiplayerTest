@@ -9,6 +9,8 @@ package com.steve6472.multiplayerTest;
 
 import static org.lwjgl.glfw.GLFW.*;
 
+import java.util.HashMap;
+
 import org.joml.Matrix4f;
 import org.joml.Vector4f;
 
@@ -57,6 +59,8 @@ public class Game extends MainApplication
 	public ClientGui clientGui;
 	public RenderTestGui renderTestGui;
 	
+	public static int SERVER_CHUNK_SIZE = 8, SERVER_WORLD_SIZE = 64;
+	
 	public static InventoryRenderer inventoryRenderer;
 	
 	public static EntityList entityList;
@@ -103,6 +107,8 @@ public class Game extends MainApplication
 	
 	public static Sprite tileSprite;
 	
+	public static HashMap<Integer, Shader> particleShaderList = new HashMap<Integer, Shader>();
+	
 	@Override
 	public void init()
 	{
@@ -146,6 +152,7 @@ public class Game extends MainApplication
 		Packet.addPacket(33,  	CCloseInventory.class);
 		Packet.addPacket(34,  	CMoveItem.class);
 		Packet.addPacket(35,  	CKey.class);
+		Packet.addPacket(36,  	CAllowPackets.class);
 		
 		//FIXME
 //		GameTile.initGameTiles(ServerTile.getAtlas(), 32, 32, new Shader("shaders\\basev2"), 31, 17);
@@ -196,6 +203,20 @@ public class Game extends MainApplication
 		
 		inventoryRenderer = new InventoryRenderer(this);
 		
+		for (ParticleType pt : ParticleType.values())
+		{
+			try
+			{
+				IParticle ip = pt.getClazz().newInstance();
+				
+				particleShaderList.put(pt.getParticleId(), ip.getShader());
+				
+			} catch (InstantiationException | IllegalAccessException e)
+			{
+				e.printStackTrace();
+			}
+		}
+		
 		Helper.initHelper();
 		RenderMethods.init(camera);
 
@@ -241,7 +262,7 @@ public class Game extends MainApplication
 		new MenuGui(this);
 	}
 
-	public static boolean isTileLocOutOfBounds(int x, int y, GameWorld world)
+	public static boolean isTileLocOutOfBounds(int x, int y)
 	{
 		return (x < 0 || y < 0 || x >= (World.worldWidth * Chunk.chunkWidth) || y >= (World.worldHeight * Chunk.chunkHeight));
 	}

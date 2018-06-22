@@ -155,7 +155,7 @@ public class ServerHandler implements IServerHandler
 		PlayerMP player = server.getPlayer(packet.getSender());
 		if (player != null)
 		{
-			server.sendPacket(new SOpenInventory(player.createClientInventory(), 8, 4), player);
+			player.sendPacket(new SOpenInventory(player.createClientInventory(), 8, 4));
 		} else
 		{
 			printCantFindPlayerErrorMessage(packet.getSender());

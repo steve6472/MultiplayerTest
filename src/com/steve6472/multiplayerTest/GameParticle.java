@@ -22,15 +22,12 @@ import com.steve6472.sge.main.game.Vec2;
 import com.steve6472.sge.main.game.particle.AngledParticle;
 import com.steve6472.sge.main.game.world.GameCamera;
 
+
 public class GameParticle extends AngledParticle
 {
 	private static final long serialVersionUID = -8771601191045760439L;
 	
 	float indexX, indexY, sizeX, sizeY;
-	
-	/*
-	 * INCLUDE SARRAY FOR CUSTOM VARIABLES INSTEAD OF var1 var2 var3 AND SO ON
-	 */
 	
 	public SArray bigData;
 	public SArray smallData;
@@ -80,8 +77,8 @@ public class GameParticle extends AngledParticle
 		this.moveStyle = bigMoveStyle;
 		this.smallMoveStyle = smallMoveStyle;
 		
-		bigData = new SArray(0, true, false);
-		smallData = new SArray(0, true, false);
+		bigData = new SArray();
+		smallData = new SArray();
 		
 		move[this.moveStyle].initData(bigData, seed, this);
 		

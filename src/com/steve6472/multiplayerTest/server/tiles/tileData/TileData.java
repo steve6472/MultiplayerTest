@@ -13,7 +13,7 @@ public class TileData extends SArray
 {
 	public TileData(int initialSize)
 	{
-		super(initialSize, false, false);
+		super(initialSize);
 	}
 	
 }

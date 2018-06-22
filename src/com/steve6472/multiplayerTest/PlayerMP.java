@@ -12,6 +12,7 @@ import java.net.InetAddress;
 import com.steve6472.multiplayerTest.network.Server;
 import com.steve6472.multiplayerTest.network.packets.server.STeleportPlayer;
 import com.steve6472.multiplayerTest.network.packets.server.world.SSetChunk;
+import com.steve6472.multiplayerTest.server.GameInventory;
 import com.steve6472.multiplayerTest.server.tiles.ServerTile;
 import com.steve6472.sge.gfx.Screen;
 import com.steve6472.sge.gfx.Sprite;
@@ -61,10 +62,16 @@ public class PlayerMP extends BaseEntity
 	 * -1 		- loaded
 	 */
 	public byte[] visitedChunks;
+	/**
+	 * Indexes of loaded chunks
+	 * Used for efficient loop
+	 * I really don't want to loop through the whole {@code visitedChunks} array
+	 */
 	public SGArray<Integer> tickVCH;
 	
 	public byte slot = 0;
 	private Server server;
+	public boolean canSendPackets = false;
 	
 	private static int nextNetworkId;
 	
@@ -153,7 +160,8 @@ public class PlayerMP extends BaseEntity
 	
 	public void sendPacket(Packet<? extends IPacketHandler> packet)
 	{
-		server.sendPacket(packet, getIp(), getPort());
+		if (canSendPackets)
+			server.sendPacket(packet, getIp(), getPort());
 	}
 
 	@Override
@@ -189,19 +197,19 @@ public class PlayerMP extends BaseEntity
 
 		boolean isValid = true;
 
-		if (!Game.isTileLocOutOfBounds(px00, py00, server.getWorld()))
+		if (!Game.isTileLocOutOfBounds(px00, py00))
 			if (ServerTile.getTile(server.getWorld().getTileInWorld(px00, py00, 0)).isSolid())
 				isValid = moveToLastValidLocation(this);
 
-		if (!Game.isTileLocOutOfBounds(px01, py01, server.getWorld()))
+		if (!Game.isTileLocOutOfBounds(px01, py01))
 			if (ServerTile.getTile(server.getWorld().getTileInWorld(px01, py01, 0)).isSolid())
 				isValid = moveToLastValidLocation(this);
 
-		if (!Game.isTileLocOutOfBounds(px10, py10, server.getWorld()))
+		if (!Game.isTileLocOutOfBounds(px10, py10))
 			if (ServerTile.getTile(server.getWorld().getTileInWorld(px10, py10, 0)).isSolid())
 				isValid = moveToLastValidLocation(this);
 
-		if (!Game.isTileLocOutOfBounds(px11, py11, server.getWorld()))
+		if (!Game.isTileLocOutOfBounds(px11, py11))
 			if (ServerTile.getTile(server.getWorld().getTileInWorld(px11, py11, 0)).isSolid())
 				isValid = moveToLastValidLocation(this);
 		
@@ -285,32 +293,44 @@ public class PlayerMP extends BaseEntity
 	{
 		for (int i = 0; i < tickVCH.getSize(); i++)
 		{
-			int index = tickVCH.getObject(i);
+			int index = tickVCH.get(i);
 			byte b = visitedChunks[index];
 
+			//If still on delay remove 1
 			if (b > 0 && b <= Server.lagChunkDelay)
 				visitedChunks[index]--;
 
+			//If no longer on delay and has been loaded or not loaded remove it from list
 			if (visitedChunks[index] == 0 || visitedChunks[index] == -1)
-				toBeRemoved.addObject(i);
+				toBeRemoved.add(i);
 		}
-
-		toBeRemoved.reverseArray();
-
-		for (int i : toBeRemoved)
+		
+		SGArray<Integer> toAdd = new SGArray<Integer>();
+		
+		for (int i = 0; i < toBeRemoved.getSize(); i++)
 		{
-			int index = tickVCH.getObject(i);
+			int index = tickVCH.get(toBeRemoved.get(i));
 			byte b = visitedChunks[index];
+			
 			if (index >= 0 && index < World.worldWidth * World.worldHeight && b == 0)
 			{
 				visitedChunks[index] = Server.lagChunkDelay;
-				tickVCH.addObject(index);
+				toAdd.add(index);
 				sendPacket(new SSetChunk(server.getWorld().getChunk(index % World.worldWidth, index / World.worldHeight).getMap().getObject(0),
 						index % World.worldWidth, index / World.worldHeight));
 			}
-			tickVCH.remove(i);
+		}
+		
+		if (toBeRemoved.getSize() > 0)
+		{
+			for (int i = toBeRemoved.getSize() - 1; i >= 0; i--)
+			{
+				tickVCH.remove(toBeRemoved.get(i));
+			}
 		}
 
+		tickVCH.add(toAdd);
+		
 		toBeRemoved.clear();
 	}
 

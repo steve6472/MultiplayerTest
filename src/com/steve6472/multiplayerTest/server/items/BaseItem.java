@@ -7,8 +7,8 @@
 
 package com.steve6472.multiplayerTest.server.items;
 
-import com.steve6472.multiplayerTest.GameWorld;
 import com.steve6472.multiplayerTest.PlayerMP;
+import com.steve6472.multiplayerTest.server.ServerWorld;
 
 public class BaseItem extends ServerItem
 {
@@ -20,7 +20,7 @@ public class BaseItem extends ServerItem
 	}
 
 	@Override
-	public void mouseEvent(int x, int y, int tx, int ty, PlayerMP player, int action, int button, GameWorld world, int slot)
+	public void mouseEvent(int x, int y, int tx, int ty, PlayerMP player, int action, int button, ServerWorld world, int slot)
 	{
 	}
 

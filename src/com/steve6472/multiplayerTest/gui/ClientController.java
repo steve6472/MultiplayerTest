@@ -13,7 +13,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.steve6472.multiplayerTest.Game;
-import com.steve6472.multiplayerTest.GameInventory;
 import com.steve6472.multiplayerTest.GameItem;
 import com.steve6472.multiplayerTest.animations.SwingAnimationV3;
 import com.steve6472.multiplayerTest.network.Client;
@@ -24,6 +23,7 @@ import com.steve6472.multiplayerTest.network.packets.client.CMovePacket;
 import com.steve6472.multiplayerTest.network.packets.client.CPing;
 import com.steve6472.multiplayerTest.network.packets.client.CRotate;
 import com.steve6472.multiplayerTest.network.packets.client.CUpdatePacket;
+import com.steve6472.multiplayerTest.server.GameInventory;
 import com.steve6472.sge.main.KeyList;
 import com.steve6472.sge.main.MainApplication;
 import com.steve6472.sge.main.callbacks.CharCallback;
@@ -148,19 +148,19 @@ public class ClientController implements KeyList
 		if (client.getWorld() == null)
 			return false;
 		
-		if (!Game.isTileLocOutOfBounds(px00, py00, client.getWorld()))
+		if (!Game.isTileLocOutOfBounds(px00, py00))
 			if (clientGui.solidTiles[client.getWorld().getTileInWorldSafe(px00, py00, 0)])
 				return true;
 
-		if (!Game.isTileLocOutOfBounds(px01, py01, client.getWorld()))
+		if (!Game.isTileLocOutOfBounds(px01, py01))
 			if (clientGui.solidTiles[client.getWorld().getTileInWorldSafe(px01, py01, 0)])
 				return true;
 
-		if (!Game.isTileLocOutOfBounds(px10, py10, client.getWorld()))
+		if (!Game.isTileLocOutOfBounds(px10, py10))
 			if (clientGui.solidTiles[client.getWorld().getTileInWorldSafe(px10, py10, 0)])
 				return true;
 
-		if (!Game.isTileLocOutOfBounds(px11, py11, client.getWorld()))
+		if (!Game.isTileLocOutOfBounds(px11, py11))
 			if (clientGui.solidTiles[client.getWorld().getTileInWorldSafe(px11, py11, 0)])
 				return true;
 		
