@@ -7,6 +7,10 @@
 
 package com.steve6472.multiplayerTest.client;
 
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+
 import org.joml.Matrix4f;
 
 import com.steve6472.multiplayerTest.Game;
@@ -18,20 +22,21 @@ import com.steve6472.sge.gfx.Camera;
 import com.steve6472.sge.gfx.Helper;
 import com.steve6472.sge.gfx.Model;
 import com.steve6472.sge.gfx.Shader;
-import com.steve6472.sge.main.SGArray;
 import com.steve6472.sge.main.game.world.GameCamera;
 import com.steve6472.sge.main.game.world.World;
 
 public class ClientWorld extends World
 {
 	private final int worldId;
-	public SGArray<IParticle> particles;
+	public List<IParticle> particles;
+	public List<IParticle> addParticles;
 	
 	public ClientWorld(int worldId)
 	{
 		this.worldId = worldId;
 		
-		particles = new SGArray<IParticle>();
+		particles = new ArrayList<IParticle>();
+		addParticles = new ArrayList<IParticle>();
 	}
 	
 	@Override
@@ -53,29 +58,39 @@ public class ClientWorld extends World
 		if (ClientGui.atlas != null)
 			ClientGui.atlas.getAtlas().bind();
 		
-		for (IParticle p : particles)
+		//I can do this cuz I have only one particle type
+		if (particles.size() != 0)
 		{
-			p.render();
+				particles.get(0).startRender();
+		}
+		
+		for (int i = 0; i < particles.size(); i++)
+		{
+			IParticle p = particles.get(i);
+			if (p != null)
+				p.render();
+		}
+		
+		if (particles.size() != 0)
+		{
+				particles.get(0).endRender();
 		}
 	}
 	
 	public void tick()
 	{
-		SGArray<Integer> dead = new SGArray<Integer>();
-		
-		for (IParticle p : particles)
+		for (Iterator<IParticle> iter = particles.iterator(); iter.hasNext();)
 		{
+			IParticle p = iter.next();
+			
 			p.tick();
+			
 			if (p.isDead())
-				dead.add(particles.getIterIndex());
+				iter.remove();
 		}
 		
-		dead.reverseArray();
-		
-		for (int i : dead)
-		{
-			particles.remove(i);
-		}
+		particles.addAll(addParticles);
+		addParticles.clear();
 	}
 
 	public int getWorldId()

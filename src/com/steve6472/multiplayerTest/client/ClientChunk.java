@@ -13,9 +13,9 @@ import com.steve6472.sge.main.game.world.World;
 public class ClientChunk extends Chunk
 {
 
-	public ClientChunk(World world)
+	public ClientChunk(World world, int chunkX, int chunkY)
 	{
-		super(world);
+		super(world, chunkX, chunkY);
 	}
 
 }

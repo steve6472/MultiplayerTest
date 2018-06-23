@@ -420,7 +420,7 @@ public class Game extends MainApplication
 		rectShader.setUniform4f("color", colors[0], colors[1], colors[2], colors[3]);
 		rectShader.setUniformMat4f("projection", target);
 		
-		tileModel.render();
+		fullModel.render();
 	}
 
 	@Override

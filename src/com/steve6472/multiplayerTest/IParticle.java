@@ -14,8 +14,12 @@ public interface IParticle
 {
 	public void tick();
 	
+	public void startRender();
+	
 	public void render();
 	
+	public void endRender();
+
 	public boolean isDead();
 	
 	public Sprite getSprite();

@@ -18,9 +18,9 @@ public class ServerChunk extends Chunk
 {
 	private SGArray<TileData[]> tileData;
 	
-	public ServerChunk(World world)
+	public ServerChunk(World world, int chunkX, int chunkY)
 	{
-		super(world);
+		super(world, chunkX, chunkY);
 		tileData = new SGArray<TileData[]>(layerCount);
 		
 		for (int l = 0; l < layerCount; l++)
@@ -37,13 +37,13 @@ public class ServerChunk extends Chunk
 			ServerTile tile = ServerTile.getTile(id);
 			if (tile instanceof BaseTile)
 			{
-				if (id == 30 || id == ServerTile.particleTest.getId())
+				if (id == 30 || id == ServerTile.particleTest.getId() || id == ServerTile.destroyedWall.getId())
 					System.out.println("Setting " + id + " at " + x + "/" + y + " l:" + layer);
 				
 				if (((BaseTile) tile).hasTileData())
 				{
 					setTileData(x, y, layer, ((BaseTile) tile).getTileDataController().generateTileData());
-					System.out.println("Created Tile Data for " + tile.getClass().getSimpleName() + " at " + x + "/" + y);
+					System.out.println("Created Tile Data for " + tile.getClass().getName() + " at " + x + "/" + y);
 				}
 			} else
 			{
@@ -76,14 +76,18 @@ public class ServerChunk extends Chunk
 
 	public void setTileData(int x, int y, int layer, TileData data)
 	{
+		int X = x + chunkWidth * chunkX;
+		int Y = y + chunkHeight * chunkY;
+		System.out.println("New Tile Data at " + X + "/" + Y + "/ L:" + layer + " data: " + data);
 		if (data == null)
 		{
 			ServerWorld gw = (ServerWorld) world;
-			gw.tileDataLocations.remove(Integer.valueOf(x + y * World.worldWidth));
+			gw.tileDataLocations.remove(Integer.valueOf(X + Y * (World.worldWidth * Chunk.chunkWidth)));
 		} else
 		{
 			ServerWorld gw = (ServerWorld) world;
-			gw.tileDataLocations.add(Integer.valueOf(x + y * World.worldWidth));
+			gw.tileDataLocations.add(Integer.valueOf(X + Y * (World.worldWidth * Chunk.chunkWidth)));
+			gw.tileDataLocations.printContent();
 		}
 		tileData.get(layer)[x + y * chunkWidth] = data;
 	}

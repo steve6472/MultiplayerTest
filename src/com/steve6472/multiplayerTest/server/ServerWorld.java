@@ -48,6 +48,7 @@ public class ServerWorld extends World
 				BaseTile baseTile = (BaseTile) tile;
 				if (baseTile.hasTileData())
 				{
+//					System.out.println(tileId + " " + t + " " + (tile instanceof BaseTile) + " " + baseTile.hasTileData() + " " + baseTile.getTileDataController());
 					int x = t % (World.worldWidth * Chunk.chunkWidth);
 					int y = t / (World.worldHeight * Chunk.chunkHeight);
 					

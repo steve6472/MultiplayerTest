@@ -12,11 +12,11 @@ import org.joml.Matrix4f;
 import com.steve6472.multiplayerTest.Game;
 import com.steve6472.multiplayerTest.IParticle;
 import com.steve6472.multiplayerTest.gui.ClientGui;
+import com.steve6472.sge.gfx.Model;
 import com.steve6472.sge.gfx.Shader;
 import com.steve6472.sge.gfx.Sprite;
 import com.steve6472.sge.main.game.particle.AngledParticle;
 import com.steve6472.sge.main.game.world.GameCamera;
-import com.steve6472.sge.main.game.world.GameTile;
 
 public class TileCrackParticle extends AngledParticle implements IParticle
 {
@@ -39,6 +39,14 @@ public class TileCrackParticle extends AngledParticle implements IParticle
 		this.tileIndexY = tileIndexY;
 		this.rotation = rotation;
 		setSpeed(speed);
+	}
+	
+	@Override
+	public void startRender()
+	{
+		Model.start();
+		
+		Model.bindBuffers(Game.tileModel);
 	}
 
 	@Override
@@ -74,7 +82,13 @@ public class TileCrackParticle extends AngledParticle implements IParticle
 		//Apply transformation matrix
 		shader.setUniformMat4f("transformation", mat);
 
-		Game.tileModel.render();
+		Model.drawArrays(Game.tileModel);
+	}
+	
+	@Override
+	public void endRender()
+	{
+		Model.end();
 	}
 
 	@Override

@@ -10,6 +10,7 @@ package com.steve6472.multiplayerTest.server.tiles;
 import com.steve6472.multiplayerTest.Bullet;
 import com.steve6472.multiplayerTest.PlayerMP;
 import com.steve6472.multiplayerTest.server.ServerWorld;
+import com.steve6472.multiplayerTest.server.tiles.tileData.BrokenWallController;
 import com.steve6472.multiplayerTest.server.tiles.tileData.ParticleBlock;
 import com.steve6472.sge.main.SGArray;
 import com.steve6472.sge.main.game.Atlas;
@@ -91,7 +92,7 @@ public abstract class ServerTile extends GameTile
 		wall 					= new BreakableTile(9, "wall.png", true, 0, 0xff808080, 8, 11).createHitParticles().init();
 		water 					= new BaseTile(10, "water.png", true, false, 0, 0xffbe5900).init();
 		brokenWall 				= new BreakableTile(11, "wall1.png", true, 0, 0xff808080, 6, 12).createHitParticles().init();
-		destroyedWall 			= new BaseTile(12, "destroyed_wall.png", false, false, 0, 0xff444444).init();
+		destroyedWall 			= new BaseTile(12, "destroyed_wall.png", false, false, 0, 0xff444444).setTileDataController(new BrokenWallController()).init();
 		
 		wallProg0 				= new ProgressTile(13, "wall\\wall_progress.png", true, false, 0, 0xff808080, 0, 14, 12, 1).createHitParticles().init();
 		wallProg1 				= new ProgressTile(14, "wall\\wall_progress.png", true, false, 0, 0xff808080, 1, 15, 12, 1).createHitParticles().init();

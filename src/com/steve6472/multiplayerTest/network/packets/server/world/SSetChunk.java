@@ -7,11 +7,11 @@
 
 package com.steve6472.multiplayerTest.network.packets.server.world;
 
+import com.steve6472.multiplayerTest.client.ClientChunk;
 import com.steve6472.multiplayerTest.gui.ClientGui;
 import com.steve6472.multiplayerTest.network.Client;
 import com.steve6472.multiplayerTest.network.packets.SPacket;
 import com.steve6472.multiplayerTest.network.packets.client.CConfirmChunk;
-import com.steve6472.sge.main.game.world.Chunk;
 import com.steve6472.sge.main.networking.packet.DataStream;
 
 public class SSetChunk extends SPacket
@@ -62,7 +62,7 @@ public class SSetChunk extends SPacket
 			if (clientGui.world == null)
 				return;
 			
-			Chunk c = new Chunk(clientGui.world);
+			ClientChunk c = new ClientChunk(clientGui.world, chunkX, chunkY);
 			c.setTiles(getTiles(), 0);
 			
 			clientGui.world.setChunk(getChunkX(), getChunkY(), c);

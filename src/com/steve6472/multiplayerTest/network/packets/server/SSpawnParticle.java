@@ -104,28 +104,17 @@ public class SSpawnParticle extends SPacket
 		for (int i = 0; i < getCount(); i++)
 		{
 			double ang = Util.getRandomDouble(360, 0, Util.getRandomLong(i, Long.MIN_VALUE, getSeed()));
-//			GameParticle particle = new GameParticle(
-//					getX(), 
-//					getY(),
-//					ang,
-//					Util.getRandomInt(20, 10, Util.getRandomLong(i, Long.MIN_VALUE, getSeed())),
-//					getHitId(),
-//					0,
-//					1,
-//					getSeed());
-//			particle.rotation = (float) ang + Util.getRandomFloat(30, -30);
-//			particle.bigData.setDouble(0, Util.getRandomDouble(1.48d + 0.5d, 1.48d - 0.5d));
 			TileCrackParticle particle = new TileCrackParticle(
 					x,
 					y,
 					ang,
 //					Util.getRandomInt(20, 10, Util.getRandomLong(i, Long.MIN_VALUE, seed)),
-					Util.getRandomInt(20, 10, seed),
+					Util.getRandomInt(20, 10, Util.getRandomLong(i, Long.MIN_VALUE, seed)),
 					hitId % ClientGui.atlas.getSize(),
 					hitId / ClientGui.atlas.getSize(),
 					Util.getRandomDouble(1.48d + 0.5d, 1.48d - 0.5d),
 					(float) ang + Util.getRandomFloat(30, -30));
-			clientGui.world.particles.add(particle);
+			clientGui.world.addParticles.add(particle);
 		}
 	}
 

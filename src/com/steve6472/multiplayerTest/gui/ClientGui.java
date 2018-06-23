@@ -333,7 +333,7 @@ public class ClientGui extends Gui
 		if (world != null)
 		{
 			Game.drawFont(mainApp, "Rendered Chunks: " + world.renderedChunks, 5, 35);
-			Game.drawFont(mainApp, "Particles: " + world.particles.getSize(), 5, 45);
+			Game.drawFont(mainApp, "Particles: " + world.particles.size(), 5, 45);
 		}
 		Game.drawFont(mainApp, "X/Y: " + getX() + "/" + getY(), 5, 55);
 		
